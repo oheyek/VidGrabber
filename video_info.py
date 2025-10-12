@@ -10,30 +10,30 @@ class VideoInfo:
         Constructor of a VideoInfo class.
         """
         self.ydl_opts: dict = {"quiet": True, "no_warnings": True, "extract_flat": False,
-            "force_generic_extractor": False, "noplaylist": True, }
+                               "force_generic_extractor": False, "noplaylist": True, }
 
     @staticmethod
-    def validator(link: str) -> bool | str:
+    def validator(link: str) -> bool:
         """
         Method to validate YouTube link format.
         :param link: The link provided by user.
-        :return: Whether the link is a valid YouTube link or not or a invalid link provided.
+        :return: Whether the link is a valid YouTube link or not.
         """
         try:
             return link.startswith(
                 ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
                  "http://youtu.be/",))
         except AttributeError:
-            return "Invalid link provided."
+            return False
 
-    def clean_youtube_url(self, url: str) -> str:
+    def clean_youtube_url(self, url: str) -> str | None:
         """
         Extract video ID and return clean YouTube URL
         :param url: The link to clean up.
         :return: Cleaned link.
         """
         if not self.validator(url):
-            return "Invalid YouTube link."
+            return None
         try:
             parsed = urlparse(url)
             if "youtu.be" in parsed.netloc:
@@ -48,7 +48,7 @@ class VideoInfo:
 
             return url
         except (AttributeError, TypeError):
-            return "Invalid link provided."
+            return None
 
     def get_video_info(self, link: str) -> str | list:
         """
@@ -56,12 +56,12 @@ class VideoInfo:
         :param link: The provided by user.
         :return: The video information as a list or invalid YouTube link information.
         """
-        if not self.validator(link):
-            return "Invalid YouTube link."
+        link = self.clean_youtube_url(link)
+        if not self.validator(link) or not link:
+            return "Invalid link provided."
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
                 info: dict = ydl.extract_info(link, download=False)
-
                 if not info:
                     return f"Could not extract information from: {link}"
 
@@ -69,10 +69,7 @@ class VideoInfo:
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
                 video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
-                    f"{minutes}:{remaining}", ]
+                                    f"{minutes}:{remaining}", ]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
-
-        except TypeError:
-            return "Invalid link provided."
