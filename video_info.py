@@ -9,13 +9,8 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict = {
-            "quiet": True,
-            "no_warnings": True,
-            "extract_flat": False,
-            "force_generic_extractor": False,
-            "noplaylist": True,
-        }
+        self.ydl_opts: dict = {"quiet": True, "no_warnings": True, "extract_flat": False,
+            "force_generic_extractor": False, "noplaylist": True, }
 
     @staticmethod
     def validator(link: str) -> bool | str:
@@ -26,13 +21,8 @@ class VideoInfo:
         """
         try:
             return link.startswith(
-                (
-                    "https://www.youtube.com/watch?v=",
-                    "https://youtu.be/",
-                    "http://www.youtube.com/watch?v=",
-                    "http://youtu.be/",
-                )
-            )
+                ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
+                 "http://youtu.be/",))
         except AttributeError:
             return "Invalid link provided."
 
@@ -78,12 +68,8 @@ class VideoInfo:
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
-                video_info: list = [
-                    info.get("title"),
-                    info.get("uploader"),
-                    info.get("description"),
-                    f"{minutes}:{remaining}",
-                ]
+                video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
+                    f"{minutes}:{remaining}", ]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
