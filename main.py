@@ -6,7 +6,9 @@ def main() -> None:
     Main function of the program.
     """
     video_info = VideoInfo()
-    print(video_info.get_video_info("https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"))
+    for info in video_info.get_video_info("https://youtu.be/dQw4w9WgXcQ?si=SPIt6zX1gx9NouFZ"):
+        print(info)
+
 
 if __name__ == "__main__":
     main()
