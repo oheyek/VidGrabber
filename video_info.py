@@ -53,7 +53,7 @@ class VideoInfo:
     def get_video_info(self, link: str) -> str | list:
         """
         Method to get YouTube video title from a given link.
-        :param link: The provided by user.
+        :param link: The link provided by user.
         :return: The video information as a list or invalid YouTube link information.
         """
         link = self.clean_youtube_url(link)
