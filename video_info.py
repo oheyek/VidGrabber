@@ -9,40 +9,56 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict = {"quiet": True, "no_warnings": True, "extract_flat": False,
-            "force_generic_extractor": False, "noplaylist": True, }
+        self.ydl_opts: dict = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": False,
+            "force_generic_extractor": False,
+            "noplaylist": True,
+        }
 
     @staticmethod
-    def validator(link: str) -> bool:
+    def validator(link: str) -> bool | str:
         """
         Method to validate YouTube link format.
         :param link: The link provided by user.
-        :return: Whether the link is a valid YouTube link or not.
+        :return: Whether the link is a valid YouTube link or not or a invalid link provided.
         """
-        return link.startswith(
-            ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
-             "http://youtu.be/",))
+        try:
+            return link.startswith(
+                (
+                    "https://www.youtube.com/watch?v=",
+                    "https://youtu.be/",
+                    "http://www.youtube.com/watch?v=",
+                    "http://youtu.be/",
+                )
+            )
+        except AttributeError:
+            return "Invalid link provided."
 
-    @staticmethod
-    def clean_youtube_url(url: str) -> str:
+    def clean_youtube_url(self, url: str) -> str:
         """
         Extract video ID and return clean YouTube URL
         :param url: The link to clean up.
         :return: Cleaned link.
         """
-        parsed = urlparse(url)
-
-        if "youtu.be" in parsed.netloc:
-            video_id = parsed.path.lstrip("/")
-            return f"https://www.youtube.com/watch?v={video_id}"
-
-        if "youtube.com" in parsed.netloc:
-            query_params: dict = parse_qs(parsed.query)
-            if "v" in query_params:
-                video_id = query_params["v"][0]
+        if not self.validator(url):
+            return "Invalid YouTube link."
+        try:
+            parsed = urlparse(url)
+            if "youtu.be" in parsed.netloc:
+                video_id = parsed.path.lstrip("/")
                 return f"https://www.youtube.com/watch?v={video_id}"
 
-        return url
+            if "youtube.com" in parsed.netloc:
+                query_params: dict = parse_qs(parsed.query)
+                if "v" in query_params:
+                    video_id = query_params["v"][0]
+                    return f"https://www.youtube.com/watch?v={video_id}"
+
+            return url
+        except (AttributeError, TypeError):
+            return "Invalid link provided."
 
     def get_video_info(self, link: str) -> str | list:
         """
@@ -62,8 +78,15 @@ class VideoInfo:
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
-                video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
-                    f"{minutes}:{remaining}", ]
+                video_info: list = [
+                    info.get("title"),
+                    info.get("uploader"),
+                    info.get("description"),
+                    f"{minutes}:{remaining}",
+                ]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
+
+        except TypeError:
+            return "Invalid link provided."
