@@ -1,4 +1,5 @@
 from yt_dlp import YoutubeDL
+from yt_dlp.utils import DownloadError
 
 
 class VideoInfo:
@@ -6,7 +7,8 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict = {"quiet": True, "skip_download": True, }
+        self.ydl_opts: dict = {'quiet': True, 'no_warnings': True, 'extract_flat': False,
+                               'force_generic_extractor': False}
 
     @staticmethod
     def validator(link: str) -> bool:
@@ -23,16 +25,22 @@ class VideoInfo:
         """
         Method to get YouTube video title from a given link.
         :param link: The provided by user.
-        :return: The video information as a list or invalid youtube link information.
+        :return: The video information as a list or invalid YouTube link information.
         """
-        if self.validator(link):
+        if not self.validator(link):
+            return "Invalid YouTube link."
+        try:
             with YoutubeDL(self.ydl_opts) as ydl:
                 info: dict = ydl.extract_info(link, download=False)
+
+                if not info:
+                    return f"Could not extract information from: {link}"
+
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
                 video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
-                    f"{minutes}:{remaining}", ]
+                                    f"{minutes}:{remaining}", ]
                 return video_info
-
-        return "Invalid youtube link."
+        except DownloadError:
+            return f"Download error (video may be unavailable or private): {link}"
