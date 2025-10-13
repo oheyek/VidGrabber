@@ -1,4 +1,3 @@
-from typing import Any
 from urllib.parse import urlparse, parse_qs
 
 from yt_dlp import YoutubeDL
@@ -66,10 +65,11 @@ class VideoInfo:
                 if not info:
                     return f"Could not extract information from: {link}"
                 qualities: list = []
-                formats: [str, Any] = info.get("formats", [])
-                for format in formats:
-                    if format.get("ext") == "mp4":
-                        qualities.append(f"{format.get('ext')} {format.get('height')}p {int(format.get('fps', ''))}fps")
+                formats = info.get("formats", [])
+                for video_format in formats:
+                    if video_format.get("ext") == "mp4":
+                        qualities.append(
+                            f"{video_format.get('ext')} {video_format.get('height')}p {int(video_format.get('fps', ''))}fps")
                 qualities = list(set(qualities))
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
