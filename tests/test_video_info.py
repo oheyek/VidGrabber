@@ -100,7 +100,7 @@ def test_get_info_empty_string() -> None:
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
 def test_download_valid_links(url: str) -> None:
     """Test for downloading videos with valid links"""
-    assert downloader.download_video(url, 144) == "Video downloaded"
+    assert downloader.download_video(url, 144) == "Download completed!"
 
 
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
