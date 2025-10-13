@@ -1,3 +1,4 @@
+from typing import Any
 from urllib.parse import urlparse, parse_qs
 
 from yt_dlp import YoutubeDL
@@ -9,13 +10,8 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict[str, bool] = {
-            "quiet": True,
-            "no_warnings": True,
-            "extract_flat": False,
-            "force_generic_extractor": False,
-            "noplaylist": True,
-        }
+        self.ydl_opts: dict[str, bool] = {"quiet": True, "no_warnings": True, "extract_flat": False,
+                                          "force_generic_extractor": False, "noplaylist": True, }
 
     @staticmethod
     def validator(link: str) -> bool:
@@ -26,13 +22,8 @@ class VideoInfo:
         """
         try:
             return link.startswith(
-                (
-                    "https://www.youtube.com/watch?v=",
-                    "https://youtu.be/",
-                    "http://www.youtube.com/watch?v=",
-                    "http://youtu.be/",
-                )
-            )
+                ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
+                 "http://youtu.be/",))
         except AttributeError:
             return False
 
@@ -74,16 +65,17 @@ class VideoInfo:
                 info: dict = ydl.extract_info(link, download=False)
                 if not info:
                     return f"Could not extract information from: {link}"
-
+                qualities: list = []
+                formats: [str, Any] = info.get("formats", [])
+                for format in formats:
+                    if format.get("ext") == "mp4":
+                        qualities.append(f"{format.get('ext')} {format.get('height')}p {int(format.get('fps', ''))}fps")
+                qualities = list(set(qualities))
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
-                video_info: list = [
-                    info.get("title"),
-                    info.get("uploader"),
-                    info.get("description"),
-                    f"{minutes}:{remaining}",
-                ]
+                video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
+                                    f"{minutes}:{remaining}", *sorted(qualities)]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
