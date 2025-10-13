@@ -11,7 +11,7 @@ def main() -> None:
     for information in video_info.get_video_info("https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"):
         print(information)
 
-    print(downloader.download_video("https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", 144))
+    print(downloader.download_video("https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", 1440))
 
 
 if __name__ == "__main__":
