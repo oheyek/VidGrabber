@@ -9,8 +9,13 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict = {"quiet": True, "no_warnings": True, "extract_flat": False,
-                               "force_generic_extractor": False, "noplaylist": True, }
+        self.ydl_opts: dict[str, bool] = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": False,
+            "force_generic_extractor": False,
+            "noplaylist": True,
+        }
 
     @staticmethod
     def validator(link: str) -> bool:
@@ -21,8 +26,13 @@ class VideoInfo:
         """
         try:
             return link.startswith(
-                ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
-                 "http://youtu.be/",))
+                (
+                    "https://www.youtube.com/watch?v=",
+                    "https://youtu.be/",
+                    "http://www.youtube.com/watch?v=",
+                    "http://youtu.be/",
+                )
+            )
         except AttributeError:
             return False
 
@@ -41,7 +51,7 @@ class VideoInfo:
                 return f"https://www.youtube.com/watch?v={video_id}"
 
             if "youtube.com" in parsed.netloc:
-                query_params: dict = parse_qs(parsed.query)
+                query_params: dict[str, list[str]] = parse_qs(parsed.query)
                 if "v" in query_params:
                     video_id = query_params["v"][0]
                     return f"https://www.youtube.com/watch?v={video_id}"
@@ -50,7 +60,7 @@ class VideoInfo:
         except (AttributeError, TypeError):
             return None
 
-    def get_video_info(self, link: str) -> str | list:
+    def get_video_info(self, link: str) -> str | list[str]:
         """
         Method to get YouTube video title from a given link.
         :param link: The link provided by user.
@@ -68,8 +78,12 @@ class VideoInfo:
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
-                video_info: list = [info.get("title"), info.get("uploader"), info.get("description"),
-                                    f"{minutes}:{remaining}", ]
+                video_info: list = [
+                    info.get("title"),
+                    info.get("uploader"),
+                    info.get("description"),
+                    f"{minutes}:{remaining}",
+                ]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
