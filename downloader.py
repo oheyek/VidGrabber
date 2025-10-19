@@ -69,6 +69,7 @@ class Downloader:
                 "preferredquality": "192",
             }
         ]
+        self.ydl_opts["progress_hooks"] = [progress_hook]
 
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
