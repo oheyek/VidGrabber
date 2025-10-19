@@ -19,7 +19,7 @@ class VideoInfo:
         }
 
     @staticmethod
-    def _validator(link: str) -> bool:
+    def validator(link: str) -> bool:
         """
         Method to validate YouTube link format.
         :param link: The link provided by user.
@@ -46,7 +46,7 @@ class VideoInfo:
         :param url: The link to clean up.
         :return: Cleaned link.
         """
-        if not self._validator(url):
+        if not self.validator(url):
             return None
         try:
             url = url.strip()
@@ -74,7 +74,7 @@ class VideoInfo:
         :return: The video information as a list or invalid YouTube link information.
         """
         link = self.clean_youtube_url(link)
-        if not self._validator(link) or not link:
+        if not self.validator(link) or not link:
             return "Invalid link provided."
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
@@ -96,9 +96,9 @@ class VideoInfo:
 
                 def get_resolution(quality_str: str) -> int:
                     """
-                    Function to get a resolution as a int number.
+                    Function to get a resolution as an int number.
                     :param quality_str: The whole quality string scraped from video.
-                    :return: The resolution as a int.
+                    :return: The resolution as an int.
                     """
                     parts = quality_str.split()
                     resolution = parts[1].rstrip("p")
