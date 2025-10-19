@@ -11,14 +11,14 @@ def progress_hook(download: dict[str, Any]) -> None:
     :param download: The yt_dlp download process.
     :return:
     """
-    if download['status'] == 'downloading':
-        percent = download.get('_percent_str', '0%')
-        speed = download.get('_speed_str', 'N/A')
+    if download["status"] == "downloading":
+        percent = download.get("_percent_str", "0%")
+        speed = download.get("_speed_str", "N/A")
 
-        sys.stdout.write(f'\rDownloading: {percent} | Speed: {speed}')
+        sys.stdout.write(f"\rDownloading: {percent} | Speed: {speed}")
         sys.stdout.flush()
 
-    elif download['status'] == 'finished':
+    elif download["status"] == "finished":
         return
 
 
@@ -40,10 +40,12 @@ class Downloader:
         if not isinstance(quality, int):
             return "Incorrect video quality."
         link = self.video_info.clean_youtube_url(link)
-        if not self.video_info.validator(link) or not link:
+        if not self.video_info._validator(link) or not link:
             return "Invalid link provided."
-        self.ydl_opts["format"] = f"bestvideo[height={quality}]+bestaudio/best[height={quality}]"
-        self.ydl_opts["outtmpl"] = "downloads/%(title)s.%(ext)s"
+        self.ydl_opts["format"] = (
+            f"bestvideo[height={quality}]+bestaudio/best[height={quality}]"
+        )
+        self.ydl_opts["outtmpl"] = "downloads/mp4/%(title)s.%(ext)s"
         self.ydl_opts["merge_output_format"] = "mp4"
         self.ydl_opts["progress_hooks"] = [progress_hook]
 
