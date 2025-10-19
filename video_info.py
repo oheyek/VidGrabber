@@ -10,20 +10,33 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict[str, bool] = {"quiet": True, "no_warnings": True, "extract_flat": False,
-                                          "force_generic_extractor": False, "noplaylist": True, }
+        self.ydl_opts: dict[str, bool] = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": False,
+            "force_generic_extractor": False,
+            "noplaylist": True,
+        }
 
     @staticmethod
-    def validator(link: str) -> bool:
+    def _validator(link: str) -> bool:
         """
         Method to validate YouTube link format.
         :param link: The link provided by user.
         :return: Whether the link is a valid YouTube link or not.
         """
         try:
+            link = link.strip()
+            if not link.startswith(("http://", "https://")):
+                link = "https://" + link
             return link.startswith(
-                ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
-                 "http://youtu.be/",))
+                (
+                    "https://www.youtube.com/watch?v=",
+                    "https://youtu.be/",
+                    "http://www.youtube.com/watch?v=",
+                    "http://youtu.be/",
+                )
+            )
         except AttributeError:
             return False
 
@@ -33,9 +46,12 @@ class VideoInfo:
         :param url: The link to clean up.
         :return: Cleaned link.
         """
-        if not self.validator(url):
+        if not self._validator(url):
             return None
         try:
+            url = url.strip()
+            if not url.startswith(("http://", "https://")):
+                url = "https://" + url
             parsed = urlparse(url)
             if "youtu.be" in parsed.netloc:
                 video_id = parsed.path.lstrip("/")
@@ -58,7 +74,7 @@ class VideoInfo:
         :return: The video information as a list or invalid YouTube link information.
         """
         link = self.clean_youtube_url(link)
-        if not self.validator(link) or not link:
+        if not self._validator(link) or not link:
             return "Invalid link provided."
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
@@ -69,14 +85,38 @@ class VideoInfo:
                 formats = info.get("formats", [])
                 for video_format in formats:
                     if video_format.get("ext") == "mp4":
-                        qualities.append(
-                            f"{video_format.get('ext')} {video_format.get('height')}p {int(video_format.get('fps', ''))}fps")
+                        height = video_format.get("height")
+                        fps = video_format.get("fps")
+                        if height and fps:
+                            qualities.append(
+                                f"{video_format.get('ext')} {height}p {int(fps)}fps"
+                            )
+
                 qualities = list(set(qualities))
+
+                def get_resolution(quality_str: str) -> int:
+                    """
+                    Function to get a resolution as a int number.
+                    :param quality_str: The whole quality string scraped from video.
+                    :return: The resolution as a int.
+                    """
+                    parts = quality_str.split()
+                    resolution = parts[1].rstrip("p")
+                    return int(resolution)
+
+                qualities = sorted(qualities, key=get_resolution)
+
                 seconds: int = info.get("duration")
                 minutes: int = seconds // 60
                 remaining: int = seconds % 60
-                video_info: list[str] = [info.get("title"), info.get("uploader"), info.get("description"),
-                                         f"{minutes}:{remaining}", *sorted(qualities)]
+
+                video_info: list[str] = [
+                    info.get("title"),
+                    info.get("uploader"),
+                    info.get("description"),
+                    f"{minutes}:{remaining:02d}",
+                    *qualities,
+                ]
                 return video_info
         except DownloadError:
             return f"Download error (video may be unavailable or private): {link}"
