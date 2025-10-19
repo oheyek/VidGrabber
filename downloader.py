@@ -56,16 +56,25 @@ class Downloader:
         except DownloadError:
             return "Incorrect video quality."
 
-    def download_mp3(self, link: str) -> str:
+    def download_audio(self, link: str, audio_format: str) -> str:
+        """
+        Method to download audio from a YouTube video in a desired format (MP3/WAV).
+        :param link: The link to the video
+        :param audio_format: The format of the output file user want.
+        :return: Success message.
+        """
+        allowed_formats: list[str] = ["MP3", "WAV"]
+        if str(audio_format).strip().upper() not in allowed_formats:
+            return "Incorrect audio format."
         link = self.video_info.clean_youtube_url(link)
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
         self.ydl_opts["format"] = "bestaudio/best"
-        self.ydl_opts["outtmpl"] = "downloads/mp3/%(title)s.%(ext)s"
+        self.ydl_opts["outtmpl"] = f"downloads/{audio_format.lower()}/%(title)s.%(ext)s"
         self.ydl_opts["postprocessors"] = [
             {
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
+                "preferredcodec": audio_format.lower(),
                 "preferredquality": "192",
             }
         ]
@@ -74,6 +83,6 @@ class Downloader:
         try:
             with YoutubeDL(self.ydl_opts) as ydl:
                 ydl.download([link])
-                return "MP3 download completed!"
+                return f"{audio_format.upper()} download completed!"
         except DownloadError as e:
-            return "Incorrect video."
+            return f"Download failed: {e}"

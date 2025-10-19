@@ -1,6 +1,8 @@
 from downloader import Downloader
 from video_info import VideoInfo
 
+LINK = "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"
+
 
 def main() -> None:
     """
@@ -8,18 +10,12 @@ def main() -> None:
     """
     video_info: VideoInfo = VideoInfo()
     downloader: Downloader = Downloader(video_info)
-    for information in video_info.get_video_info(
-        "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"
-    ):
+    for information in video_info.get_video_info(LINK):
         print(information)
 
-    print(
-        downloader.download_video(
-            "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", 1440
-        )
-    )
+    print(downloader.download_video(LINK, 1440))
 
-    print(downloader.download_mp3("https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"))
+    print(downloader.download_audio(LINK, "mp3"))
 
 
 if __name__ == "__main__":
