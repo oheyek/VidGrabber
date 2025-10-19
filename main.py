@@ -19,6 +19,8 @@ def main() -> None:
         )
     )
 
+    print(downloader.download_mp3("https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"))
+
 
 if __name__ == "__main__":
     main()

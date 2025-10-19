@@ -39,24 +39,24 @@ TEST_VIDEO_INFO = [
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
 def test_valid_youtube_urls(url: str) -> None:
     """Test that valid YouTube URLs are accepted."""
-    assert video_info._validator(url)
+    assert video_info.validator(url)
 
 
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
 def test_invalid_youtube_urls(url: str) -> None:
     """Test that invalid YouTube URLs are rejected."""
-    assert not video_info._validator(url)
+    assert not video_info.validator(url)
 
 
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
 def test_invalid_input_types(invalid_input) -> None:
     """Test that non-string inputs return error message."""
-    assert not video_info._validator(invalid_input)
+    assert not video_info.validator(invalid_input)
 
 
 def test_empty_string() -> None:
     """Test that empty string is rejected."""
-    assert not video_info._validator("")
+    assert not video_info.validator("")
 
 
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
@@ -82,7 +82,7 @@ def test_clean_invalid_input_types(invalid_input) -> None:
 
 def test_cleaning_empty_string() -> None:
     """Test that empty string is rejected."""
-    assert not video_info._validator("") == "Invalid link provided."
+    assert not video_info.validator("") == "Invalid link provided."
 
 
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
@@ -113,7 +113,7 @@ def test_get_info_valid_urls(url: str) -> None:
 
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
 def test_get_info_invalid_urls(url: str) -> None:
-    """Test for getting info of a invalid YouTube URLs."""
+    """Test for getting info of an invalid YouTube URLs."""
     assert video_info.get_video_info(url) == "Invalid link provided."
 
 

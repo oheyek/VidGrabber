@@ -40,7 +40,7 @@ class Downloader:
         if not isinstance(quality, int):
             return "Incorrect video quality."
         link = self.video_info.clean_youtube_url(link)
-        if not self.video_info._validator(link) or not link:
+        if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
         self.ydl_opts["format"] = (
             f"bestvideo[height={quality}]+bestaudio/best[height={quality}]"
@@ -55,3 +55,24 @@ class Downloader:
                 return "Download completed!"
         except DownloadError:
             return "Incorrect video quality."
+
+    def download_mp3(self, link: str) -> str:
+        link = self.video_info.clean_youtube_url(link)
+        if not self.video_info.validator(link) or not link:
+            return "Invalid link provided."
+        self.ydl_opts["format"] = "bestaudio/best"
+        self.ydl_opts["outtmpl"] = "downloads/mp3/%(title)s.%(ext)s"
+        self.ydl_opts["postprocessors"] = [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }
+        ]
+
+        try:
+            with YoutubeDL(self.ydl_opts) as ydl:
+                ydl.download([link])
+                return "MP3 download completed!"
+        except DownloadError as e:
+            return "Incorrect video."
