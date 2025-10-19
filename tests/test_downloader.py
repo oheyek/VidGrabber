@@ -41,7 +41,7 @@ def test_download_url_invalid_input_types(invalid_input) -> None:
     assert downloader.download_video(invalid_input, 144) == "Invalid link provided."
 
 
-@pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
+@pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34, "144"])
 def test_download_video_invalid_qualities(invalid_input) -> None:
     """Test for downloading videos with invalid video qualities."""
     assert (
@@ -68,23 +68,45 @@ def test_download_empty_quality() -> None:
 
 
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-def test_download_mp3_valid_links(url: str) -> None:
-    """Test for downloading mp3 with valid links"""
-    assert downloader.download_mp3(url) == "MP3 download completed!"
+def test_download_audio_valid_links(url: str) -> None:
+    """Test for downloading audio with valid links"""
+    assert downloader.download_audio(url, "mp3") == "MP3 download completed!"
+    assert downloader.download_audio(url, "wav") == "WAV download completed!"
 
 
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-def test_download_mp3_invalid_urls(url: str) -> None:
-    """Test for downloading mp3 with invalid YouTube URLs."""
-    assert downloader.download_mp3(url) == "Invalid link provided."
+def test_download_audio_invalid_urls(url: str) -> None:
+    """Test for downloading audio with invalid YouTube URLs."""
+    assert downloader.download_audio(url, "mp3") == "Invalid link provided."
 
 
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-def test_download_mp3_url_invalid_input_types(invalid_input) -> None:
-    """Test for downloading mp3 with invalid YouTube URLs."""
-    assert downloader.download_mp3(invalid_input) == "Invalid link provided."
+def test_download_audio_url_invalid_input_types(invalid_input) -> None:
+    """Test for downloading audio with invalid YouTube URLs."""
+    assert downloader.download_audio(invalid_input, "mp3") == "Invalid link provided."
 
 
-def test_download_mp3_empty_url() -> None:
+@pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34, "test"])
+def test_download_video_invalid_formats(invalid_input) -> None:
+    """Test for downloading audio with invalid audio formats."""
+    assert (
+        downloader.download_audio(
+            "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", invalid_input
+        )
+        == "Incorrect audio format."
+    )
+
+
+def test_download_audio_empty_url() -> None:
     """Test that empty string is rejected while downloading."""
-    assert downloader.download_mp3("") == "Invalid link provided."
+    assert downloader.download_audio("", "mp3") == "Invalid link provided."
+
+
+def test_download_audio_empty_quality() -> None:
+    """Test that empty string is rejected while downloading."""
+    assert (
+        downloader.download_audio(
+            "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", ""
+        )
+        == "Incorrect audio format."
+    )
