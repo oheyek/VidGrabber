@@ -1,19 +1,25 @@
 import os
 
+import pyperclip
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
 
-def save_tags(tags: list[str], title: str) -> None:
+def save_tags_and_copy_to_clipboard(tags: list[str], title: str) -> None:
     """
-    Function to save tags to a csv file.
+    Function to save tags to a csv file and copy them to a clipboard.
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
     """
     os.makedirs("downloads/tags", exist_ok=True)
+    tags_text = "".join(f"{tag},\n" for tag in tags)
     with open(f"downloads/tags/{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
-        for tag in tags:
-            f.write(f"{tag},\n")
+        f.write(tags_text)
+    try:
+        pyperclip.copy(tags_text)
+        return "Tags saved to file and copied to clipboard!"
+    except Exception as e:
+        return f"Tags saved to file only (no clipboard access) {e}"
 
 
 class TagExtractor:
@@ -40,8 +46,7 @@ class TagExtractor:
                 info = ydl.extract_info(link, download=False)
             tags = info.get("tags") or []
             title = (info.get("title") or "").replace(" ", "_")
-            save_tags(tags, title)
-            return "Tags saved to file!"
+            return save_tags_and_copy_to_clipboard(tags, title)
         except DownloadError as e:
             return f"Download failed: {e}"
 
