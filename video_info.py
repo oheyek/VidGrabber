@@ -1,5 +1,5 @@
-from typing import Optional, List, Union
-from urllib.parse import urlparse, parse_qs
+from typing import List, Optional, Union
+from urllib.parse import parse_qs, urlparse
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
