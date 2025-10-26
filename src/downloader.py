@@ -1,8 +1,12 @@
 import sys
 from typing import Any
+from .path_manager import PathManager
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
+
+path_manager: PathManager = PathManager()
+paths = path_manager.load_settings()
 
 
 def progress_hook(download: dict[str, Any]) -> None:
@@ -45,7 +49,7 @@ class Downloader:
         self.ydl_opts["format"] = (
             f"bestvideo[height={quality}]+bestaudio/best[height={quality}]"
         )
-        self.ydl_opts["outtmpl"] = "downloads/mp4/%(title)s.%(ext)s"
+        self.ydl_opts["outtmpl"] = f"{paths.get("mp4")}/%(title)s.%(ext)s"
         self.ydl_opts["merge_output_format"] = "mp4"
         self.ydl_opts["progress_hooks"] = [progress_hook]
 
@@ -70,7 +74,7 @@ class Downloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
         self.ydl_opts["format"] = "bestaudio/best"
-        self.ydl_opts["outtmpl"] = f"downloads/{audio_format.lower()}/%(title)s.%(ext)s"
+        self.ydl_opts["outtmpl"] = f"{paths.get(audio_format.lower())}/%(title)s.%(ext)s"
         self.ydl_opts["postprocessors"] = [
             {
                 "key": "FFmpegExtractAudio",
