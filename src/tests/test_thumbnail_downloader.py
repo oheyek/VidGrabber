@@ -1,7 +1,7 @@
 import pytest
 
-from thumbnail_downloader import ThumbnailDownloader
-from video_info import VideoInfo
+from src.thumbnail_downloader import ThumbnailDownloader
+from src.video_info import VideoInfo
 
 video_info = VideoInfo()
 thumbnail_downloader = ThumbnailDownloader(video_info)

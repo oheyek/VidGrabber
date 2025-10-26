@@ -3,7 +3,9 @@ import os
 import pyperclip
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
-
+from .path_manager import PathManager
+path_manager: PathManager = PathManager()
+paths = path_manager.load_settings()
 
 def save_tags_and_copy_to_clipboard(tags: list[str], title: str) -> None:
     """
@@ -11,9 +13,9 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str) -> None:
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
     """
-    os.makedirs("downloads/tags", exist_ok=True)
+    os.makedirs(paths.get("tags"), exist_ok=True)
     tags_text = "".join(f"{tag},\n" for tag in tags)
-    with open(f"downloads/tags/{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
+    with open(f"{paths.get("tags")}/{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
         f.write(tags_text)
     try:
         pyperclip.copy(tags_text)
