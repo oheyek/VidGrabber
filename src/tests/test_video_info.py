@@ -1,6 +1,6 @@
 import pytest
 
-from video_info import VideoInfo
+from src.video_info import VideoInfo
 
 video_info = VideoInfo()
 

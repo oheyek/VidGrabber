@@ -1,7 +1,7 @@
 import pytest
 
-from tag_extractor import TagExtractor
-from video_info import VideoInfo
+from src.tag_extractor import TagExtractor
+from src.video_info import VideoInfo
 
 video_info = VideoInfo()
 tag_extractor = TagExtractor(video_info)
