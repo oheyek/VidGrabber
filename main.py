@@ -1,6 +1,3 @@
-from src.downloader import Downloader
-from src.tag_extractor import TagExtractor
-from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
 from src.updater import update_yt_dlp, check_yt_dlp_version
 from src.queue.download_queue import DownloadQueue
@@ -20,10 +17,7 @@ def main() -> None:
     print("=" * 50)
     print()
     video_info: VideoInfo = VideoInfo()
-    downloader: Downloader = Downloader(video_info)
     queue: DownloadQueue = DownloadQueue()
-    thumbnail_downloader: ThumbnailDownloader = ThumbnailDownloader(video_info)
-    tag_extractor: TagExtractor = TagExtractor(video_info)
 
     for information in video_info.get_video_info(LINK):
         print(information)

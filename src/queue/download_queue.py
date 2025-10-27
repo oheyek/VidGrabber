@@ -9,7 +9,7 @@ class DownloadQueue:
         """
         Constructor of a download queue class.
         """
-        self.max_downloads = 5
+        self.max_downloads: int = 5
         self.videos_queue:dict[str, int] = {}
         self.mp3_queue: list[str] = []
         self.wav_queue: list[str] = []
@@ -27,7 +27,7 @@ class DownloadQueue:
         :param quality: Desired video quality.
         :return: Information whether the video has been added to queue or the queue limit has been reached.
         """
-        if len(self.videos_queue) > 5:
+        if len(self.videos_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.videos_queue[link] = quality
         return "Video added to queue"
@@ -38,7 +38,7 @@ class DownloadQueue:
         :param link: The video link.
         :return: Information whether the audio has been added to queue or the queue limit has been reached.
         """
-        if len(self.mp3_queue) > 5:
+        if len(self.mp3_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.mp3_queue.append(link)
         return "Audio added to queue"
@@ -49,7 +49,7 @@ class DownloadQueue:
         :param link: The video link.
         :return: Information whether the audio has been added to queue or the queue limit has been reached.
         """
-        if len(self.wav_queue) > 5:
+        if len(self.wav_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.wav_queue.append(link)
         return "Audio added to queue"
@@ -60,7 +60,7 @@ class DownloadQueue:
         :param link: The video link.
         :return: Information whether the thumbnail has been added to queue or the queue limit has been reached.
         """
-        if len(self.thumbnail_queue) > 5:
+        if len(self.thumbnail_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.thumbnail_queue.append(link)
         return "Thumbnail added to queue"
@@ -69,58 +69,58 @@ class DownloadQueue:
         """
         Method to add tags to a queue list.
         :param link: The tags link.
-        :return: Information whether the tags has been added to queue or the queue limit has been reached.
+        :return: Information whether the tags have been added to queue or the queue limit has been reached.
         """
-        if len(self.tags_queue) > 5:
+        if len(self.tags_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.tags_queue.append(link)
-        return "Thumbnail added to queue"
+        return "Tags added to queue"
 
     def start_queue(self, queue_type: str) -> str:
         """
-        Method to start queue with a desired
+        Method to start queue with a desired queue type.
         :param queue_type: Type of the files we want to download (MP4, MP3, WAV, JPG or TAGS)
-        :return:
+        :return: Success or failure message.
         """
         if queue_type == "mp4":
-            if self.videos_queue == 0:
+            if not self.videos_queue:
                 return "Nothing to download, queue is empty."
             for link, quality in self.videos_queue.items():
                 print(self.downloader.download_video(link, quality))
             self.videos_queue = {}
-            return "All downloads has been finished."
+            return "All downloads have been finished."
 
         elif queue_type == "mp3":
-            if self.mp3_queue == 0:
+            if not self.mp3_queue:
                 return "Nothing to download, queue is empty."
             for link in self.mp3_queue:
                 print(self.downloader.download_audio(link, "mp3"))
-            self.mp3_queue = {}
-            return "All downloads has been finished."
+            self.mp3_queue = []
+            return "All downloads have been finished."
 
         elif queue_type == "wav":
-            if self.wav_queue == 0:
+            if not self.wav_queue:
                 return "Nothing to download, queue is empty."
             for link in self.wav_queue:
                 print(self.downloader.download_audio(link, "wav"))
-            self.wav_queue = {}
-            return "All downloads has been finished."
+            self.wav_queue = []
+            return "All downloads have been finished."
 
         elif queue_type == "jpg":
-            if self.thumbnail_queue == 0:
+            if not self.thumbnail_queue:
                 return "Nothing to download, queue is empty."
             for link in self.thumbnail_queue:
                 print(self.thumbnail_downloader.download_thumbnail(link))
-            self.thumbnail_queue = {}
-            return "All downloads has been finished."
+            self.thumbnail_queue = []
+            return "All downloads have been finished."
 
         elif queue_type == "csv":
-            if self.tags_queue == 0:
+            if not self.tags_queue:
                 return "Nothing to download, queue is empty."
             for link in self.tags_queue:
                 print(self.tag_extractor.extract_tags(link, copy=False))
-            self.tags_queue = {}
-            return "All downloads has been finished."
+            self.tags_queue = []
+            return "All downloads have been finished."
         else:
             return "Invalid queue type."
 
