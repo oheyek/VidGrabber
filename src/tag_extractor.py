@@ -7,9 +7,10 @@ from .path_manager import PathManager
 path_manager: PathManager = PathManager()
 paths = path_manager.load_settings()
 
-def save_tags_and_copy_to_clipboard(tags: list[str], title: str) -> None:
+def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> None:
     """
     Function to save tags to a csv file and copy them to a clipboard.
+    :param copy: Bool value whether the tags have to be copied to clipboard.
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
     """
@@ -17,11 +18,13 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str) -> None:
     tags_text = "".join(f"{tag},\n" for tag in tags)
     with open(f"{paths.get("tags")}/{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
         f.write(tags_text)
-    try:
-        pyperclip.copy(tags_text)
-        return "Tags saved to file and copied to clipboard!"
-    except Exception as e:
-        return f"Tags saved to file only (no clipboard access) {e}"
+    if copy:
+        try:
+            pyperclip.copy(tags_text)
+            return "Tags saved to file and copied to clipboard!"
+        except Exception as e:
+            return f"Tags saved to file only (no clipboard access) {e}"
+    return "Tags saved to file."
 
 
 class TagExtractor:
@@ -33,9 +36,10 @@ class TagExtractor:
         self.ydl_opts = video_info.ydl_opts
 
 
-    def extract_tags(self, link: str) -> str:
+    def extract_tags(self, link: str, copy: bool = True) -> str:
         """
         Method to extract tags list from a YouTube video link.
+        :param copy: Bool value whether the tags have to be copied to clipboard.
         :param link: The YouTube video.
         :return: Success message.
         """
@@ -48,7 +52,7 @@ class TagExtractor:
                 info = ydl.extract_info(link, download=False)
             tags = info.get("tags") or []
             title = (info.get("title") or "").replace(" ", "_")
-            return save_tags_and_copy_to_clipboard(tags, title)
+            return save_tags_and_copy_to_clipboard(tags, title, copy)
         except DownloadError as e:
             return f"Download failed: {e}"
 

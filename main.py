@@ -1,10 +1,13 @@
 from src.downloader import Downloader
+from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
-from src.tag_extractor import TagExtractor
 from src.updater import update_yt_dlp, check_yt_dlp_version
+from src.queue.download_queue import DownloadQueue
 
 LINK = "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"
+LINK2 = "https://youtu.be/njX2bu-_Vw4?si=VgF6vfdYZFh9dhPe"
+LINK3 = "https://youtu.be/xOMMV_qXcQ8?si=q5pqhGOqFbcr4acG"
 
 
 def main() -> None:
@@ -18,18 +21,38 @@ def main() -> None:
     print()
     video_info: VideoInfo = VideoInfo()
     downloader: Downloader = Downloader(video_info)
+    queue: DownloadQueue = DownloadQueue()
     thumbnail_downloader: ThumbnailDownloader = ThumbnailDownloader(video_info)
     tag_extractor: TagExtractor = TagExtractor(video_info)
 
     for information in video_info.get_video_info(LINK):
         print(information)
 
-    print(downloader.download_video(LINK, 1440))
+    print(queue.add_video(LINK, 240))
+    print(queue.add_video(LINK2, 240))
+    print(queue.add_video(LINK3, 240))
 
-    print(downloader.download_audio(LINK, "mp3"))
-    print(thumbnail_downloader.download_thumbnail(LINK))
-    print(tag_extractor.extract_tags(LINK))
+    print(queue.add_mp3_audio(LINK))
+    print(queue.add_mp3_audio(LINK2))
+    print(queue.add_mp3_audio(LINK3))
 
+    print(queue.add_wav_audio(LINK))
+    print(queue.add_wav_audio(LINK2))
+    print(queue.add_wav_audio(LINK3))
+
+    print(queue.add_thumbnail(LINK))
+    print(queue.add_thumbnail(LINK2))
+    print(queue.add_thumbnail(LINK3))
+
+    print(queue.add_tags(LINK))
+    print(queue.add_tags(LINK2))
+    print(queue.add_tags(LINK3))
+
+    print(queue.start_queue("mp4"))
+    print(queue.start_queue("mp3"))
+    print(queue.start_queue("wav"))
+    print(queue.start_queue("jpg"))
+    print(queue.start_queue("csv"))
 
 if __name__ == "__main__":
     main()
