@@ -64,6 +64,20 @@ def test_add_video_empty_quality() -> None:
     test_queue = DownloadQueue()
     assert test_queue.add_video(VALID_YOUTUBE_URLS[0], "") == "Incorrect video quality."
 
+def test_add_video_duplicate_same_quality() -> None:
+    """Test adding duplicate video with same quality."""
+    test_queue = DownloadQueue()
+    test_queue.add_video(VALID_YOUTUBE_URLS[0], 240)
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 240) == "Video with this quality already in queue."
+
+
+def test_add_video_duplicate_different_quality() -> None:
+    """Test adding same video with different quality."""
+    test_queue = DownloadQueue()
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 240) == "Video added to queue"
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 480) == "Video added to queue"
+
+
 
 # Tests for add_mp3_audio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)

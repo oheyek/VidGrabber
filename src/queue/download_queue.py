@@ -31,12 +31,14 @@ class DownloadQueue:
 
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
-        if not isinstance(quality, int) or isinstance(quality, bool):
+        if isinstance(quality, bool) or not isinstance(quality, int):
             return "Incorrect video quality."
         if quality not in valid_qualities:
             return "Incorrect video quality."
         if len(self.videos_queue) >= self.max_downloads:
             return "Queue limit reached."
+        if link in self.videos_queue and self.videos_queue[link] == quality:
+            return "Video with this quality already in queue."
         self.videos_queue[link] = quality
         return "Video added to queue"
 
