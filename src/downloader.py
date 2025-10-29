@@ -49,7 +49,7 @@ class Downloader:
         self.ydl_opts["format"] = (
             f"bestvideo[height={quality}]+bestaudio/best[height={quality}]"
         )
-        self.ydl_opts["outtmpl"] = f"{paths.get("mp4")}/%(title)s.%(ext)s"
+        self.ydl_opts["outtmpl"] = f"{paths.get('mp4')}/%(title)s_{quality}p.%(ext)s"
         self.ydl_opts["merge_output_format"] = "mp4"
         self.ydl_opts["progress_hooks"] = [progress_hook]
 
