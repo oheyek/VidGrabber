@@ -10,7 +10,7 @@ class DownloadQueue:
         Constructor of a download queue class.
         """
         self.max_downloads: int = 5
-        self.videos_queue:dict[str, int] = {}
+        self.videos_queue: dict[str, list[int]] = {}
         self.mp3_queue: list[str] = []
         self.wav_queue: list[str] = []
         self.thumbnail_queue: list[str] = []
@@ -35,11 +35,18 @@ class DownloadQueue:
             return "Incorrect video quality."
         if quality not in valid_qualities:
             return "Incorrect video quality."
-        if len(self.videos_queue) >= self.max_downloads:
+
+        total_videos = sum(len(q) for q in self.videos_queue.values())
+        if total_videos >= self.max_downloads:
             return "Queue limit reached."
-        if link in self.videos_queue and self.videos_queue[link] == quality:
-            return "Video with this quality already in queue."
-        self.videos_queue[link] = quality
+
+        if link not in self.videos_queue:
+            self.videos_queue[link] = [quality]
+        else:
+            if quality in self.videos_queue[link]:
+                return "Video with this quality already in queue."
+            self.videos_queue[link].append(quality)
+
         return "Video added to queue"
 
     def add_mp3_audio(self, link: str) -> str:
@@ -103,10 +110,11 @@ class DownloadQueue:
         if queue_type == "mp4":
             if not self.videos_queue:
                 return "Nothing to download, queue is empty."
-            for link, quality in self.videos_queue.items():
-                print(self.downloader.download_video(link, quality))
+            for link, qualities in self.videos_queue.items():
+                for quality in qualities:
+                    print(self.downloader.download_video(link, quality))
             self.videos_queue = {}
-            return "All downloads have been finished."
+            return "All video downloads have been finished."
 
         elif queue_type == "mp3":
             if not self.mp3_queue:
@@ -114,7 +122,7 @@ class DownloadQueue:
             for link in self.mp3_queue:
                 print(self.downloader.download_audio(link, "mp3"))
             self.mp3_queue = []
-            return "All downloads have been finished."
+            return "All audio downloads have been finished."
 
         elif queue_type == "wav":
             if not self.wav_queue:
@@ -122,7 +130,7 @@ class DownloadQueue:
             for link in self.wav_queue:
                 print(self.downloader.download_audio(link, "wav"))
             self.wav_queue = []
-            return "All downloads have been finished."
+            return "All audio downloads have been finished."
 
         elif queue_type == "jpg":
             if not self.thumbnail_queue:
@@ -130,7 +138,7 @@ class DownloadQueue:
             for link in self.thumbnail_queue:
                 print(self.thumbnail_downloader.download_thumbnail(link))
             self.thumbnail_queue = []
-            return "All downloads have been finished."
+            return "All thumbnail downloads have been finished."
 
         elif queue_type == "csv":
             if not self.tags_queue:
@@ -138,7 +146,7 @@ class DownloadQueue:
             for link in self.tags_queue:
                 print(self.tag_extractor.extract_tags(link, copy=False))
             self.tags_queue = []
-            return "All downloads have been finished."
+            return "All tag extractions have been finished."
+
         else:
             return "Invalid queue type."
-

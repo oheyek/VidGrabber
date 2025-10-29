@@ -23,6 +23,7 @@ def main() -> None:
         print(information)
 
     print(queue.add_video(LINK, 240))
+    print(queue.add_video(LINK, 360))
     print(queue.add_video(LINK2, 240))
     print(queue.add_video(LINK3, 240))
 
