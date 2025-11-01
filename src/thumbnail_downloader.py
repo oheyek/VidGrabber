@@ -4,7 +4,7 @@ from .path_manager import PathManager
 from .logger import log_call
 
 path_manager: PathManager = PathManager()
-paths = path_manager.load_settings()
+paths = path_manager.load_settings() or {}
 
 
 class ThumbnailDownloader:

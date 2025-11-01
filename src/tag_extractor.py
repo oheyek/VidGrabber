@@ -6,7 +6,7 @@ from yt_dlp.utils import DownloadError
 from .path_manager import PathManager
 from .logger import log_call
 path_manager: PathManager = PathManager()
-paths = path_manager.load_settings()
+paths = path_manager.load_settings() or {}
 
 def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> None:
     """
