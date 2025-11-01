@@ -3,6 +3,7 @@ from src.downloader import Downloader
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.tag_extractor import TagExtractor
+from src.logger import log_call
 
 
 class DownloadQueue:
@@ -21,6 +22,7 @@ class DownloadQueue:
         self.thumbnail_downloader: ThumbnailDownloader = ThumbnailDownloader(self.video_info)
         self.tag_extractor: TagExtractor = TagExtractor(self.video_info)
 
+    @log_call
     def add_video(self, link: str, quality: int) -> str:
         """
         Method to add videos to a queue list.
@@ -50,6 +52,7 @@ class DownloadQueue:
 
         return "Video added to queue"
 
+    @log_call
     def add_mp3_audio(self, link: str) -> str:
         """
         Method to add mp3 audio to a queue list.
@@ -63,6 +66,7 @@ class DownloadQueue:
         self.mp3_queue.append(link)
         return "Audio added to queue"
 
+    @log_call
     def add_wav_audio(self, link: str) -> str:
         """
         Method to add wav audio to a queue list.
@@ -76,6 +80,7 @@ class DownloadQueue:
         self.wav_queue.append(link)
         return "Audio added to queue"
 
+    @log_call
     def add_thumbnail(self, link: str) -> str:
         """
         Method to add thumbnails to a queue list.
@@ -89,6 +94,7 @@ class DownloadQueue:
         self.thumbnail_queue.append(link)
         return "Thumbnail added to queue"
 
+    @log_call
     def add_tags(self, link: str) -> str:
         """
         Method to add tags to a queue list.
@@ -102,6 +108,7 @@ class DownloadQueue:
         self.tags_queue.append(link)
         return "Tags added to queue"
 
+    @log_call
     async def start_queue(self, queue_type: str) -> str:
         """
         Asynchronous method to start queue with a desired queue type.

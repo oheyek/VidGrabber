@@ -62,6 +62,7 @@ class Downloader:
         except DownloadError:
             return "Incorrect video quality."
 
+    @log_call
     def download_audio(self, link: str, audio_format: str) -> str:
         """
         Method to download audio from a YouTube video in a desired format (MP3/WAV).

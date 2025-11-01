@@ -25,7 +25,7 @@ def log_call(func):
     :return: Wrapped function
     """
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: object, **kwargs: object) -> Coroutine[Any, Any, Any] | Any:
         try:
             parts = [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
             args_str = ", ".join(parts)
@@ -38,7 +38,7 @@ def log_call(func):
             result = func(*args, **kwargs)
 
             if asyncio.iscoroutine(result):
-                async def async_handler():
+                async def async_handler() -> Any:
                     try:
                         res = await result
                         logger.info(f"{func_name} | args: {args_str} | result: {res!r}")
