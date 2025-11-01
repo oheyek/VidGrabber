@@ -1,76 +1,91 @@
 import json
 from pathlib import Path
-import shutil
-from typing import Any
+from typing import Dict
 
 
 class PathManager:
+    DEFAULT_EXTENSIONS = ["mp4", "mp3", "wav", "jpg", "tags"]
+
     def __init__(self) -> None:
-        """
-        Constructor of a PathManager class.
-        """
-        self.settings = Path.home() / "Documents" / "VidGrabber"
-        self.settings_file = self.settings / "settings.json"
-        self._ensure_paths()
+        """Constructor of a PathManager class."""
+        self.settings_dir = Path.home() / "Documents" / "VidGrabber"
+        self.settings_file = self.settings_dir / "settings.json"
+        self._ensure_settings_file()
+        self.paths = self.load_settings()
 
-        if self._should_apply_defaults():
-            self._apply_default_settings()
+    def _ensure_settings_file(self) -> None:
+        """Ensure settings directory and file exist."""
+        self.settings_dir.mkdir(parents=True, exist_ok=True)
 
-    def _ensure_paths(self) -> None:
-        """
-        Method to check the state of the settings folder and file and create if needed.
-        """
-        if not self.settings.exists():
-            self.settings.mkdir(parents=True, exist_ok=True)
-
+        # Remove if it's a directory instead of file
         if self.settings_file.exists() and self.settings_file.is_dir():
+            import shutil
             shutil.rmtree(self.settings_file)
 
-        if not self.settings_file.exists():
-            self.settings_file.touch(exist_ok=True)
+        # Create with defaults if doesn't exist or is empty
+        if not self.settings_file.exists() or self.settings_file.stat().st_size == 0:
+            self._write_default_settings()
 
-    def _should_apply_defaults(self) -> bool:
-        """
-        Check if we need to apply default settings.
-        :return: Bool value whether the file needs default settings to apply.
-        """
-        if self.settings_file.stat().st_size == 0:
-            return True
+    def _write_default_settings(self) -> None:
+        """Write default download paths to settings file."""
+        defaults = {
+            ext: str(Path.home() / "Downloads" / ext)
+            for ext in self.DEFAULT_EXTENSIONS
+        }
 
+        with open(self.settings_file, "w", encoding="utf-8") as f:
+            json.dump(defaults, f, ensure_ascii=False, indent=4)
+
+    def load_settings(self) -> Dict[str, Path]:
+        """
+        Load settings from file and ensure directories exist.
+        :return: Dictionary mapping extensions to Path objects.
+        """
         try:
             with open(self.settings_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return not data
-        except json.JSONDecodeError:
-            return True
+        except (json.JSONDecodeError, OSError, FileNotFoundError):
+            self._write_default_settings()
+            return self.load_settings()
 
-    def _apply_default_settings(self) -> None:
-        """
-        Method to apply default download paths to the settings file.
-        """
-        self.default_download_paths: dict[str, Path] = {
-            "mp4": Path.home() / "Downloads" / "mp4/",
-            "mp3": Path.home() / "Downloads" / "mp3/",
-            "wav": Path.home() / "Downloads" / "wav/",
-            "jpg": Path.home() / "Downloads" / "jpg/",
-            "tags": Path.home() / "Downloads" / "tags/",
-        }
+        if not data:
+            self._write_default_settings()
+            return self.load_settings()
 
-        serializable_paths = {
-            key: str(value) for key, value in self.default_download_paths.items()
-        }
+        # Convert to Path objects and create directories
+        paths = {}
+        for key, value in data.items():
+            path = Path(value)
+            path.mkdir(parents=True, exist_ok=True)
+            paths[key] = path
 
-        with open(self.settings_file, "w", encoding="utf-8") as settings:
-            json.dump(
-                serializable_paths, settings, ensure_ascii=False, indent=4
-            )
-
-    def load_settings(self) -> Any:
-        """
-        Method to load paths from a file.
-        :return: The file paths dictionary.
-        """
-        if self.settings_file.exists() and self.settings_file.is_file():
-            with open(self.settings_file, "r", encoding="utf-8") as settings:
-                paths = json.load(settings)
         return paths
+
+    def get_download_path(self, ext: str) -> Path:
+        """
+        Get download path for extension, creating it if necessary.
+        Thread-safe implementation for concurrent downloads.
+        :param ext: File extension (without dot)
+        :return: Path object for the download directory
+        """
+        if ext not in self.paths:
+            # Create fallback path
+            fallback = Path.home() / "Downloads" / ext
+            self.paths[ext] = fallback
+
+        # Ensure directory exists (thread-safe with exist_ok=True)
+        try:
+            self.paths[ext].mkdir(parents=True, exist_ok=True)
+        except FileExistsError:
+            pass
+
+        return self.paths[ext]
+
+    @staticmethod
+    def ensure_parent(file_path: Path) -> None:
+        """
+        Ensure parent directory exists for a file path.
+
+        :param file_path: Path to a file
+        """
+        file_path.parent.mkdir(parents=True, exist_ok=True)
