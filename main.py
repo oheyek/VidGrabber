@@ -1,3 +1,4 @@
+import asyncio
 from src.video_info import VideoInfo
 from src.updater import update_yt_dlp, check_yt_dlp_version
 from src.queue.download_queue import DownloadQueue
@@ -43,11 +44,11 @@ def main() -> None:
     print(queue.add_tags(LINK2))
     print(queue.add_tags(LINK3))
 
-    print(queue.start_queue("mp4"))
-    print(queue.start_queue("mp3"))
-    print(queue.start_queue("wav"))
-    print(queue.start_queue("jpg"))
-    print(queue.start_queue("csv"))
+    print(asyncio.run(queue.start_queue("mp4")))
+    print(asyncio.run(queue.start_queue("mp3")))
+    print(asyncio.run(queue.start_queue("wav")))
+    print(asyncio.run(queue.start_queue("jpg")))
+    print(asyncio.run(queue.start_queue("csv")))
 
 if __name__ == "__main__":
     main()

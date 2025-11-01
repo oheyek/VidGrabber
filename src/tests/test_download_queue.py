@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 
 from src.queue.download_queue import DownloadQueue
 
@@ -199,34 +200,34 @@ def test_add_tags_empty_url() -> None:
 def test_start_queue_mp4_empty() -> None:
     """Test starting empty MP4 queue."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("mp4") == "Nothing to download, queue is empty."
+    assert asyncio.run(test_queue.start_queue("mp4")) == "Nothing to download, queue is empty."
 
 
 def test_start_queue_mp3_empty() -> None:
     """Test starting empty MP3 queue."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("mp3") == "Nothing to download, queue is empty."
+    assert asyncio.run(test_queue.start_queue("mp3")) == "Nothing to download, queue is empty."
 
 
 def test_start_queue_wav_empty() -> None:
     """Test starting empty WAV queue."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("wav") == "Nothing to download, queue is empty."
+    assert asyncio.run(test_queue.start_queue("wav")) == "Nothing to download, queue is empty."
 
 
 def test_start_queue_jpg_empty() -> None:
     """Test starting empty JPG queue."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("jpg") == "Nothing to download, queue is empty."
+    assert asyncio.run(test_queue.start_queue("jpg")) == "Nothing to download, queue is empty."
 
 
 def test_start_queue_csv_empty() -> None:
     """Test starting empty CSV queue."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("csv") == "Nothing to download, queue is empty."
+    assert asyncio.run(test_queue.start_queue("csv")) == "Nothing to download, queue is empty."
 
 
 def test_start_queue_invalid_type() -> None:
     """Test starting queue with invalid type."""
     test_queue = DownloadQueue()
-    assert test_queue.start_queue("invalid") == "Invalid queue type."
+    assert asyncio.run(test_queue.start_queue("invalid")) == "Invalid queue type."
