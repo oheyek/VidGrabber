@@ -1,6 +1,7 @@
 import sys
 from typing import Any
 from .path_manager import PathManager
+from .logger import log_call
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
@@ -34,6 +35,7 @@ class Downloader:
         self.video_info = video_info
         self.ydl_opts = video_info.ydl_opts
 
+    @log_call
     def download_video(self, link: str, quality: int) -> str:
         """
         Method to download a YouTube video in a desired quality.
