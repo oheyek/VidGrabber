@@ -1,3 +1,4 @@
+import asyncio
 from src.downloader import Downloader
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
@@ -101,50 +102,81 @@ class DownloadQueue:
         self.tags_queue.append(link)
         return "Tags added to queue"
 
-    def start_queue(self, queue_type: str) -> str:
+    async def start_queue(self, queue_type: str) -> str:
         """
-        Method to start queue with a desired queue type.
+        Asynchronous method to start queue with a desired queue type.
         :param queue_type: Type of the files we want to download (MP4, MP3, WAV, JPG or TAGS)
         :return: Success or failure message.
         """
+        sem = asyncio.Semaphore(self.max_downloads)
+
+        async def _run_in_thread(func, *args):
+            async with sem:
+                return await asyncio.to_thread(func, *args)
+
         if queue_type == "mp4":
             if not self.videos_queue:
                 return "Nothing to download, queue is empty."
-            for link, qualities in self.videos_queue.items():
-                for quality in qualities:
-                    print(self.downloader.download_video(link, quality))
+            tasks = [
+                asyncio.create_task(_run_in_thread(self.downloader.download_video, link, quality))
+                for link, qualities in self.videos_queue.items()
+                for quality in qualities
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
             self.videos_queue = {}
             return "All video downloads have been finished."
 
         elif queue_type == "mp3":
             if not self.mp3_queue:
                 return "Nothing to download, queue is empty."
-            for link in self.mp3_queue:
-                print(self.downloader.download_audio(link, "mp3"))
+            tasks = [
+                asyncio.create_task(_run_in_thread(self.downloader.download_audio, link, "mp3"))
+                for link in self.mp3_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
             self.mp3_queue = []
             return "All audio downloads have been finished."
 
         elif queue_type == "wav":
             if not self.wav_queue:
                 return "Nothing to download, queue is empty."
-            for link in self.wav_queue:
-                print(self.downloader.download_audio(link, "wav"))
+            tasks = [
+                asyncio.create_task(_run_in_thread(self.downloader.download_audio, link, "wav"))
+                for link in self.wav_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
             self.wav_queue = []
             return "All audio downloads have been finished."
 
         elif queue_type == "jpg":
             if not self.thumbnail_queue:
                 return "Nothing to download, queue is empty."
-            for link in self.thumbnail_queue:
-                print(self.thumbnail_downloader.download_thumbnail(link))
+            tasks = [
+                asyncio.create_task(_run_in_thread(self.thumbnail_downloader.download_thumbnail, link))
+                for link in self.thumbnail_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
             self.thumbnail_queue = []
             return "All thumbnail downloads have been finished."
 
         elif queue_type == "csv":
             if not self.tags_queue:
                 return "Nothing to download, queue is empty."
-            for link in self.tags_queue:
-                print(self.tag_extractor.extract_tags(link, copy=False))
+            tasks = [
+                asyncio.create_task(_run_in_thread(self.tag_extractor.extract_tags, link, False))
+                for link in self.tags_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
             self.tags_queue = []
             return "All tag extractions have been finished."
 
