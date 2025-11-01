@@ -1,12 +1,13 @@
-# python
-# Plik: `src/log_decorator.py`
 from pathlib import Path
 import functools
 import asyncio
 import logging
 from typing import Callable, Any, Coroutine
+from .path_manager import PathManager
 
-LOG_FILE = Path.cwd() / "logs.log"
+path_manager: PathManager = PathManager()
+
+LOG_FILE = path_manager.settings / "logs.log"
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger("project_logger")
