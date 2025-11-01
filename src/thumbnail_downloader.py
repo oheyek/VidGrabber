@@ -1,6 +1,7 @@
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 from .path_manager import PathManager
+from .logger import log_call
 
 path_manager: PathManager = PathManager()
 paths = path_manager.load_settings()
@@ -14,6 +15,7 @@ class ThumbnailDownloader:
         self.video_info = video_info
         self.ydl_opts = video_info.ydl_opts
 
+    @log_call
     def download_thumbnail(self, link: str) -> str:
         """
         Method to download a thumbnail from a YouTube video link.
