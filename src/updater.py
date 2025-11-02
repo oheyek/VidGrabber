@@ -77,3 +77,16 @@ def update_yt_dlp() -> bool:
         print("yt-dlp not found.")
         return False
 
+def verify_ffmpeg() -> bool:
+    """
+    Function to verify whether ffmpeg is available.
+    :return: Bool value whether ffmpeg is available.
+    """
+    try:
+        ffmpeg_path = get_ffmpeg_path()
+        result = subprocess.run([str(ffmpeg_path), "-version"], capture_output=True, text=True, check=True)
+        print("ffmpeg is available.")
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print(f"Warning: ffmpeg not found in {get_ffmpeg_path()}")
+        return False
