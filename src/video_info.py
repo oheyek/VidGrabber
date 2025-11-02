@@ -79,6 +79,7 @@ class VideoInfo:
                 "--dump-json",
                 "--no-warnings",
                 "--no-playlist",
+                "--skip-download",
                 "--ffmpeg-location", str(self.ffmpeg_path.parent),
                 link,
                 stdout=asyncio.subprocess.PIPE,
@@ -88,8 +89,8 @@ class VideoInfo:
             stdout, stderr = await process.communicate()
 
             if process.returncode != 0:
-                error_msg = stderr.decode().strip().lower()
-                if "private video" in error_msg or "unavailable" in error_msg:
+                error_msg = stderr.decode().strip()
+                if "Private video" in error_msg or "unavailable" in error_msg.lower():
                     return f"Download error (video may be unavailable or private): {link}"
                 return f"Error extracting info: {error_msg}"
 
@@ -98,31 +99,22 @@ class VideoInfo:
             if not info:
                 return f"Could not extract information from: {link}"
 
-            qualities: list[str] = []
+            qualities: set[str] = set()
             formats = info.get("formats", [])
 
             for video_format in formats:
-                if video_format.get("ext" == "mp4"):
+                if video_format.get("vcodec") != "none" and video_format.get("acodec") != "none":
                     height = video_format.get("height")
                     fps = video_format.get("fps")
-                    if height and fps:
-                        qualities.append(
-                            f"{video_format.get('ext')} {height}p {int(fps)}fps"
-                        )
+                    ext = video_format.get("ext")
 
-            qualities = list(set(qualities))
+                    if height and fps and ext == "mp4":
+                        qualities.add(f"mp4 {height}p {int(fps)}fps")
 
-            def get_resolution(quality_str: str) -> int:
-                """
-                Function to get a resolution as an int number.
-                :param quality_str: The whole quality string scraped from video.
-                :return: The resolution as an int.
-                """
-                parts = quality_str.split()
-                resolution = parts[1].rstrip("p")
-                return int(resolution)
-
-            qualities = sorted(qualities, key=get_resolution)
+            qualities_list = sorted(
+                list(qualities),
+                key=lambda x: int(x.split()[1].rstrip("p"))
+            )
 
             seconds: int = info.get("duration", 0)
             minutes: int = seconds // 60
@@ -133,11 +125,11 @@ class VideoInfo:
                 info.get("uploader"),
                 info.get("description"),
                 f"{minutes}:{remaining:02d}",
-                *qualities
+                *qualities_list,
             ]
             return video_info
 
         except json.JSONDecodeError:
             return f"Error parsing video information: {link}"
         except Exception as e:
-            return f"Unexcepted error: {str(e)}"
+            return f"Unexpected error: {str(e)}"
