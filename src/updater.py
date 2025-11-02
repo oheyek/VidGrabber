@@ -29,3 +29,13 @@ def get_yt_dlp_path() -> Path:
     if platform.system().lower() == "windows":
         return binaries_dir / "yt-dlp.exe"
     return binaries_dir / "yt-dlp"
+
+def get_ffmpeg_path() -> Path:
+    """
+    Function to return the path to ffmpeg binary.
+    :return: ffmpeg binary path basing on platform.
+    """
+    binaries_dir = get_binaries_dir()
+    if platform.system().lower() == "windows":
+        return binaries_dir / "ffmpeg.exe"
+    return binaries_dir / "ffmpeg"
