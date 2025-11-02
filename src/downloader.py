@@ -26,7 +26,11 @@ class Downloader:
         :return: Success message.
         """
         if not isinstance(quality, int):
-            return "Incorrect video quality"
+            return "Incorrect video quality."
+
+        allowed_qualities = [144, 240, 360, 480, 720, 1080, 1440, 2160]
+        if quality not in allowed_qualities:
+            return "Incorrect video quality."
 
         link = self.video_info.clean_youtube_url(link)
         if not self.video_info.validator(link) or not link:
@@ -40,9 +44,9 @@ class Downloader:
                 str(self.yt_dlp_path),
                 "--format", f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
                 "--merge-output-format", "mp4",
-                "--fmpeg-location", str(self.ffmpeg_path.parent),
+                "--ffmpeg-location", str(self.ffmpeg_path.parent),
                 "--output", output_template,
-                "--no-warning",
+                "--no-warnings",
                 "--newline",
                 link,
                 stdout=asyncio.subprocess.PIPE,

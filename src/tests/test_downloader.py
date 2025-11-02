@@ -23,89 +23,101 @@ INVALID_YOUTUBE_URLS = [
 ]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-def test_download_valid_links(url: str) -> None:
+async def test_download_valid_links(url: str) -> None:
     """Test for downloading videos with valid links"""
-    assert downloader.download_video(url, 144) == "Download completed!"
+    assert await downloader.download_video(url, 144) == "Download completed!"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-def test_download_invalid_urls(url: str) -> None:
+async def test_download_invalid_urls(url: str) -> None:
     """Test for downloading videos with invalid YouTube URLs."""
-    assert downloader.download_video(url, 144) == "Invalid link provided."
+    assert await downloader.download_video(url, 144) == "Invalid link provided."
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-def test_download_url_invalid_input_types(invalid_input) -> None:
+async def test_download_url_invalid_input_types(invalid_input) -> None:
     """Test for downloading videos with invalid YouTube URLs."""
-    assert downloader.download_video(invalid_input, 144) == "Invalid link provided."
+    assert await downloader.download_video(invalid_input, 144) == "Invalid link provided."
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34, "144"])
-def test_download_video_invalid_qualities(invalid_input) -> None:
+async def test_download_video_invalid_qualities(invalid_input) -> None:
     """Test for downloading videos with invalid video qualities."""
     assert (
-        downloader.download_video(
+        await downloader.download_video(
             "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", invalid_input
         )
         == "Incorrect video quality."
     )
 
 
-def test_download_empty_url() -> None:
+@pytest.mark.asyncio
+async def test_download_empty_url() -> None:
     """Test that empty string is rejected while downloading."""
-    assert downloader.download_video("", 144) == "Invalid link provided."
+    assert await downloader.download_video("", 144) == "Invalid link provided."
 
 
-def test_download_empty_quality() -> None:
+@pytest.mark.asyncio
+async def test_download_empty_quality() -> None:
     """Test that empty string is rejected while downloading."""
     assert (
-        downloader.download_video(
+        await downloader.download_video(
             "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", ""
         )
         == "Incorrect video quality."
     )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-def test_download_audio_valid_links(url: str) -> None:
+async def test_download_audio_valid_links(url: str) -> None:
     """Test for downloading audio with valid links"""
-    assert downloader.download_audio(url, "mp3") == "MP3 download completed!"
-    assert downloader.download_audio(url, "wav") == "WAV download completed!"
+    assert await downloader.download_audio(url, "mp3") == "MP3 download completed!"
+    assert await downloader.download_audio(url, "wav") == "WAV download completed!"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-def test_download_audio_invalid_urls(url: str) -> None:
+async def test_download_audio_invalid_urls(url: str) -> None:
     """Test for downloading audio with invalid YouTube URLs."""
-    assert downloader.download_audio(url, "mp3") == "Invalid link provided."
+    assert await downloader.download_audio(url, "mp3") == "Invalid link provided."
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-def test_download_audio_url_invalid_input_types(invalid_input) -> None:
+async def test_download_audio_url_invalid_input_types(invalid_input) -> None:
     """Test for downloading audio with invalid YouTube URLs."""
-    assert downloader.download_audio(invalid_input, "mp3") == "Invalid link provided."
+    assert await downloader.download_audio(invalid_input, "mp3") == "Invalid link provided."
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34, "test"])
-def test_download_video_invalid_formats(invalid_input) -> None:
+async def test_download_video_invalid_formats(invalid_input) -> None:
     """Test for downloading audio with invalid audio formats."""
     assert (
-        downloader.download_audio(
+        await downloader.download_audio(
             "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", invalid_input
         )
         == "Incorrect audio format."
     )
 
 
-def test_download_audio_empty_url() -> None:
+@pytest.mark.asyncio
+async def test_download_audio_empty_url() -> None:
     """Test that empty string is rejected while downloading."""
-    assert downloader.download_audio("", "mp3") == "Invalid link provided."
+    assert await downloader.download_audio("", "mp3") == "Invalid link provided."
 
 
-def test_download_audio_empty_quality() -> None:
+@pytest.mark.asyncio
+async def test_download_audio_empty_quality() -> None:
     """Test that empty string is rejected while downloading."""
     assert (
-        downloader.download_audio(
+        await downloader.download_audio(
             "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", ""
         )
         == "Incorrect audio format."
