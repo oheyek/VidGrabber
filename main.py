@@ -8,19 +8,20 @@ LINK2 = "https://youtu.be/njX2bu-_Vw4?si=VgF6vfdYZFh9dhPe"
 LINK3 = "https://youtu.be/xOMMV_qXcQ8?si=q5pqhGOqFbcr4acG"
 
 
-def main() -> None:
+async def main() -> None:
     """
     Main function of the program.
     """
     print("=" * 50)
-    asyncio.run(initialize_binaries())
+    await initialize_binaries()
     print("=" * 50)
     print()
-    # video_info: VideoInfo = VideoInfo()
+
+    video_info: VideoInfo = VideoInfo()
     # queue: DownloadQueue = DownloadQueue()
 
-    # for information in video_info.get_video_info(LINK):
-        # print(information)
+    for information in await video_info.get_video_info(LINK):
+        print(information)
 
     # print(queue.add_video(LINK, 240))
     # print(queue.add_video(LINK, 360))
@@ -50,4 +51,4 @@ def main() -> None:
     # print(asyncio.run(queue.start_queue("csv")))
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

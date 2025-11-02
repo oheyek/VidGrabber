@@ -1,8 +1,9 @@
+import json
+import asyncio
 from typing import List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
-from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError
+from src.updater import get_yt_dlp_path, get_ffmpeg_path
 
 
 class VideoInfo:
@@ -10,13 +11,8 @@ class VideoInfo:
         """
         Constructor of a VideoInfo class.
         """
-        self.ydl_opts: dict[str, bool] = {
-            "quiet": True,
-            "no_warnings": True,
-            "extract_flat": False,
-            "force_generic_extractor": False,
-            "noplaylist": True,
-        }
+        self.yt_dlp_path = get_yt_dlp_path()
+        self.ffmpeg_path = get_ffmpeg_path()
 
     @staticmethod
     def validator(link: str) -> bool:
@@ -67,7 +63,7 @@ class VideoInfo:
         except (AttributeError, TypeError):
             return None
 
-    def get_video_info(self, link: str) -> Union[str, List[str]]:
+    async def get_video_info(self, link: str) -> Union[str, List[str]]:
         """
         Method to get YouTube video info from a given link.
         :param link: The link provided by user.
@@ -76,47 +72,72 @@ class VideoInfo:
         link = self.clean_youtube_url(link)
         if not self.validator(link) or not link:
             return "Invalid link provided."
+
         try:
-            with YoutubeDL(self.ydl_opts) as ydl:
-                info: dict = ydl.extract_info(link, download=False)
-                if not info:
-                    return f"Could not extract information from: {link}"
-                qualities: list[str] = []
-                formats = info.get("formats", [])
-                for video_format in formats:
-                    if video_format.get("ext") == "mp4":
-                        height = video_format.get("height")
-                        fps = video_format.get("fps")
-                        if height and fps:
-                            qualities.append(
-                                f"{video_format.get('ext')} {height}p {int(fps)}fps"
-                            )
+            process = await asyncio.create_subprocess_exec(
+                str(self.yt_dlp_path),
+                "--dump-json",
+                "--no-warnings",
+                "--no-playlist",
+                "--ffmpeg-location", str(self.ffmpeg_path.parent),
+                link,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
 
-                qualities = list(set(qualities))
+            stdout, stderr = await process.communicate()
 
-                def get_resolution(quality_str: str) -> int:
-                    """
-                    Function to get a resolution as an int number.
-                    :param quality_str: The whole quality string scraped from video.
-                    :return: The resolution as an int.
-                    """
-                    parts = quality_str.split()
-                    resolution = parts[1].rstrip("p")
-                    return int(resolution)
+            if process.returncode != 0:
+                error_msg = stderr.decode().strip().lower()
+                if "private video" in error_msg or "unavailable" in error_msg:
+                    return f"Download error (video may be unavailable or private): {link}"
+                return f"Error extracting info: {error_msg}"
 
-                qualities = sorted(qualities, key=get_resolution)
+            info = json.loads(stdout.decode())
 
-                seconds: int = info.get("duration")
-                minutes: int = seconds // 60
-                remaining: int = seconds % 60
+            if not info:
+                return f"Could not extract information from: {link}"
 
-                video_info: list[str] = [
-                    info.get("title"),
-                    info.get("uploader"),
-                    info.get("description"),
-                    f"{minutes}:{remaining:02d}",
-                    *qualities,
-                ]
-                return video_info
-        except DownloadError:
-            return f"Download error (video may be unavailable or private): {link}"
+            qualities: list[str] = []
+            formats = info.get("formats", [])
+
+            for video_format in formats:
+                if video_format.get("ext" == "mp4"):
+                    height = video_format.get("height")
+                    fps = video_format.get("fps")
+                    if height and fps:
+                        qualities.append(
+                            f"{video_format.get('ext')} {height}p {int(fps)}fps"
+                        )
+
+            qualities = list(set(qualities))
+
+            def get_resolution(quality_str: str) -> int:
+                """
+                Function to get a resolution as an int number.
+                :param quality_str: The whole quality string scraped from video.
+                :return: The resolution as an int.
+                """
+                parts = quality_str.split()
+                resolution = parts[1].rstrip("p")
+                return int(resolution)
+
+            qualities = sorted(qualities, key=get_resolution)
+
+            seconds: int = info.get("duration", 0)
+            minutes: int = seconds // 60
+            remaining: int = seconds % 60
+
+            video_info: list[str] = [
+                info.get("title"),
+                info.get("uploader"),
+                info.get("description"),
+                f"{minutes}:{remaining:02d}",
+                *qualities
+            ]
+            return video_info
+
+        except json.JSONDecodeError:
+            return f"Error parsing video information: {link}"
+        except Exception as e:
+            return f"Unexcepted error: {str(e)}"
