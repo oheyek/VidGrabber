@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import platform
 from pathlib import Path
 
@@ -39,3 +38,19 @@ def get_ffmpeg_path() -> Path:
     if platform.system().lower() == "windows":
         return binaries_dir / "ffmpeg.exe"
     return binaries_dir / "ffmpeg"
+
+def check_yt_dlp_version() -> str:
+    """
+    Function to check current yt-dlp version.
+    :return: Current version of yt-dlp.
+    """
+    try:
+        yt_dlp_path = get_yt_dlp_path()
+        result = subprocess.run([str(yt_dlp_path), "--version"],
+                                capture_output=True, text=True, check=True)
+        version = result.stdout.strip()
+        print(f"Current yt-dlp version: {version}")
+        return version
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"Error while checking yt-dlp version: {e}")
+        return ""
