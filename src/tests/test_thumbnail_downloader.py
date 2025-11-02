@@ -22,21 +22,30 @@ INVALID_YOUTUBE_URLS = [
     "ftp://youtube.com/watch?v=test",
 ]
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-def test_download_thumbnail_valid_links(url: str) -> None:
+async def test_download_thumbnail_valid_links(url: str) -> None:
     """Test for downloading thumbnails with valid links"""
-    assert thumbnail_downloader.download_thumbnail(url) == "Thumbnail download completed!"
+    result = await thumbnail_downloader.download_thumbnail(url)
+    assert result == "Thumbnail download completed!"
 
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-def test_download_thumbnail_invalid_links(url: str) -> None:
+async def test_download_thumbnail_invalid_links(url: str) -> None:
     """Test for downloading thumbnails with invalid links"""
-    assert thumbnail_downloader.download_thumbnail(url) == "Invalid link provided."
+    result = await thumbnail_downloader.download_thumbnail(url)
+    assert result == "Invalid link provided."
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-def test_download_thumbnail_invalid_input_types(invalid_input) -> None:
+async def test_download_thumbnail_invalid_input_types(invalid_input) -> None:
     """Test for downloading thumbnails with invalid YouTube URLs."""
-    assert thumbnail_downloader.download_thumbnail(invalid_input) == "Invalid link provided."
+    result = await thumbnail_downloader.download_thumbnail(invalid_input)
+    assert result == "Invalid link provided."
 
-def test_download_thumbnail_empty_url() -> None:
+@pytest.mark.asyncio
+async def test_download_thumbnail_empty_url() -> None:
     """Test that empty string is rejected while downloading."""
-    assert thumbnail_downloader.download_thumbnail("") == "Invalid link provided."
+    result = await thumbnail_downloader.download_thumbnail("")
+    assert result == "Invalid link provided."
