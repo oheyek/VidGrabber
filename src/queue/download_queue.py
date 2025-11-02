@@ -1,4 +1,3 @@
-import asyncio
 from src.downloader import Downloader
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
@@ -50,3 +49,46 @@ class DownloadQueue:
             self.videos_queue[link].append(quality)
 
         return "Video added to queue."
+
+    @log_call
+    def add_mp3_audio(self, link: str) -> str:
+        """
+        Method to add mp3 audio to queue list.
+        :param link: The video link.
+        :return: Information whether the audio has been added to queue or the queue limit has been reached.
+        """
+        if not isinstance(link, str) or not link:
+            return "Invalid link provided."
+        if len(self.mp3_queue) >= self.max_downloads:
+            return "Queue limit reached."
+        self.mp3_queue.append(link)
+        return "Audio added to queue."
+
+    @log_call
+    def add_wav_audio(self, link: str) -> str:
+        """
+        Method to add wav audio to queue list.
+        :param link: The video link.
+        :return: Information whether the audio has been added to queue or the queue limit has been reached.
+        """
+        if not isinstance(link, str) or not link:
+            return "Invalid link provided."
+        if len(self.wav_queue) >= self.max_downloads:
+            return "Queue limit reached."
+        self.wav_queue.append(link)
+        return "Audio added to queue."
+
+    @log_call
+    def add_thumbnail(self, link: str) -> str:
+        """
+        Method to add thumbnails to a queue list.
+        :param link: The video link.
+        :return: Information whether the thumbnail has been added to queue or the queue limit has been reached.
+        """
+        if not isinstance(link, str) or not link:
+            return "Invalid link provided."
+        if len(self.thumbnail_queue) >= self.max_downloads:
+            return "Queue limit reached."
+        self.thumbnail_queue.append(link)
+        return "Thumbnail added to queue"
+
