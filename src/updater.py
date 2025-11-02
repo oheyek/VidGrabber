@@ -1,7 +1,8 @@
-import subprocess
+import asyncio
 import os
 import platform
 from pathlib import Path
+
 
 def get_binaries_dir() -> Path:
     """
@@ -20,6 +21,7 @@ def get_binaries_dir() -> Path:
     else:
         raise OSError(f"Unsupported platform: {system}")
 
+
 def get_yt_dlp_path() -> Path:
     """
     Function to return the path to yt-dlp binary.
@@ -29,6 +31,7 @@ def get_yt_dlp_path() -> Path:
     if platform.system().lower() == "windows":
         return binaries_dir / "yt-dlp.exe"
     return binaries_dir / "yt-dlp"
+
 
 def get_ffmpeg_path() -> Path:
     """
@@ -40,6 +43,7 @@ def get_ffmpeg_path() -> Path:
         return binaries_dir / "ffmpeg.exe"
     return binaries_dir / "ffmpeg"
 
+
 def ensure_executable(file_path: Path):
     if platform.system().lower() != "windows":
         try:
@@ -47,7 +51,8 @@ def ensure_executable(file_path: Path):
         except Exception as e:
             print(f"Can't modify permissions to {file_path}: {e}")
 
-def check_yt_dlp_version() -> str:
+
+async def check_yt_dlp_version() -> str:
     """
     Function to check current yt-dlp version.
     :return: Current version of yt-dlp.
@@ -55,16 +60,23 @@ def check_yt_dlp_version() -> str:
     try:
         yt_dlp_path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
-        result = subprocess.run([str(yt_dlp_path), "--version"],
-                                capture_output=True, text=True, check=True)
-        version = result.stdout.strip()
+
+        process = await asyncio.create_subprocess_exec(
+            str(yt_dlp_path), "--version",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, _ = await process.communicate()
+
+        version = stdout.decode().strip()
         print(f"Current yt-dlp version: {version}")
         return version
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    except Exception as e:
         print(f"Error while checking yt-dlp version: {e}")
         return ""
 
-def update_yt_dlp() -> bool:
+
+async def update_yt_dlp() -> bool:
     """
     Function to update yt-dlp to the latest version.
     :return: Bool value whether yt-dlp has been updated.
@@ -73,30 +85,53 @@ def update_yt_dlp() -> bool:
         yt_dlp_path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
-        result = subprocess.run([str(yt_dlp_path), "-U"], capture_output=True, text=True, check=True)
 
-        if "up to date" in result.stdout.lower() or "up-to-date" in result.stdout.lower():
+        process = await asyncio.create_subprocess_exec(
+            str(yt_dlp_path), "-U",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, _ = await process.communicate()
+
+        output = stdout.decode()
+        if "up to date" in output.lower() or "up-to-date" in output.lower():
             print("yt-dlp is up to date.")
         else:
             print("yt-dlp has been updated.")
         return True
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         print(f"Error during yt-dlp update: {e}")
         return False
-    except FileNotFoundError:
-        print("yt-dlp not found.")
-        return False
 
-def verify_ffmpeg() -> bool:
+
+async def verify_ffmpeg() -> bool:
     """
     Function to verify whether ffmpeg is available.
     :return: Bool value whether ffmpeg is available.
     """
     try:
         ffmpeg_path = get_ffmpeg_path()
-        result = subprocess.run([str(ffmpeg_path), "-version"], capture_output=True, text=True, check=True)
+
+        process = await asyncio.create_subprocess_exec(
+            str(ffmpeg_path), "-version",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        await process.communicate()
+
         print("ffmpeg is available.")
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except Exception:
         print(f"Warning: ffmpeg not found in {get_ffmpeg_path()}")
         return False
+
+
+async def initialize_binaries() -> None:
+    """
+    Initialize and verify all binaries in parallel.
+    """
+    await asyncio.gather(
+        check_yt_dlp_version(),
+        verify_ffmpeg()
+    )
+    await update_yt_dlp()

@@ -1,6 +1,6 @@
 import asyncio
 from src.video_info import VideoInfo
-from src.updater import update_yt_dlp, check_yt_dlp_version, verify_ffmpeg, ensure_executable
+from src.updater import initialize_binaries
 from src.queue.download_queue import DownloadQueue
 
 LINK = "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"
@@ -13,9 +13,7 @@ def main() -> None:
     Main function of the program.
     """
     print("=" * 50)
-    check_yt_dlp_version()
-    update_yt_dlp()
-    verify_ffmpeg()
+    asyncio.run(initialize_binaries())
     print("=" * 50)
     print()
     # video_info: VideoInfo = VideoInfo()
