@@ -54,3 +54,26 @@ def check_yt_dlp_version() -> str:
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         print(f"Error while checking yt-dlp version: {e}")
         return ""
+
+def update_yt_dlp() -> bool:
+    """
+    Function to update yt-dlp to the latest version.
+    :return: Bool value whether yt-dlp has been updated.
+    """
+    try:
+        yt_dlp_path = get_yt_dlp_path()
+        print("Getting yt-dlp update...")
+        result = subprocess.run([str(yt_dlp_path), "-U"], capture_output=True, text=True, check=True)
+
+        if "already up to date" in result.stdout.lower() or "already up-to-date" in result.stdout.lower():
+            print("yt-dlp is up to date")
+        else:
+            print("yt-dlp has been updated.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Error during yt-dlp update: {e}")
+        return False
+    except FileNotFoundError:
+        print("yt-dlp not found.")
+        return False
+
