@@ -1,4 +1,5 @@
 import subprocess
+import os
 import platform
 from pathlib import Path
 
@@ -39,6 +40,13 @@ def get_ffmpeg_path() -> Path:
         return binaries_dir / "ffmpeg.exe"
     return binaries_dir / "ffmpeg"
 
+def ensure_executable(file_path: Path):
+    if platform.system().lower() != "windows":
+        try:
+            os.chmod(file_path, 0o755)
+        except Exception as e:
+            print(f"Can't modify permissions to {file_path}: {e}")
+
 def check_yt_dlp_version() -> str:
     """
     Function to check current yt-dlp version.
@@ -46,6 +54,7 @@ def check_yt_dlp_version() -> str:
     """
     try:
         yt_dlp_path = get_yt_dlp_path()
+        ensure_executable(yt_dlp_path)
         result = subprocess.run([str(yt_dlp_path), "--version"],
                                 capture_output=True, text=True, check=True)
         version = result.stdout.strip()
@@ -62,11 +71,12 @@ def update_yt_dlp() -> bool:
     """
     try:
         yt_dlp_path = get_yt_dlp_path()
+        ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
         result = subprocess.run([str(yt_dlp_path), "-U"], capture_output=True, text=True, check=True)
 
-        if "already up to date" in result.stdout.lower() or "already up-to-date" in result.stdout.lower():
-            print("yt-dlp is up to date")
+        if "up to date" in result.stdout.lower() or "up-to-date" in result.stdout.lower():
+            print("yt-dlp is up to date.")
         else:
             print("yt-dlp has been updated.")
         return True
