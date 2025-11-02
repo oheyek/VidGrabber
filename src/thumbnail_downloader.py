@@ -1,22 +1,24 @@
-from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError
+import asyncio
+from pathlib import Path
+
 from .path_manager import PathManager
 from .logger import log_call
+from .updater import get_yt_dlp_path, get_ffmpeg_path
 
 path_manager: PathManager = PathManager()
 paths = path_manager.load_settings() or {}
 
-
 class ThumbnailDownloader:
     def __init__(self, video_info) -> None:
         """
-        Constructor for a thumbnail downloader class
+        Constructor for a thumbnail downloader class.
         """
         self.video_info = video_info
-        self.ydl_opts = video_info.ydl_opts
+        self.yt_dlp_path = get_yt_dlp_path()
+        self.ffmpeg_path = get_ffmpeg_path()
 
     @log_call
-    def download_thumbnail(self, link: str) -> str:
+    async def download_thumbnail(self, link: str) -> str:
         """
         Method to download a thumbnail from a YouTube video link.
         :param link: YouTube video link.
@@ -25,16 +27,31 @@ class ThumbnailDownloader:
         link = self.video_info.clean_youtube_url(link)
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
-        self.ydl_opts["skip_download"] = True
-        self.ydl_opts["writethumbnail"] = True
-        self.ydl_opts["outtmpl"] = f"{paths.get('jpg')}/%(title)s.%(ext)s"
-        self.ydl_opts["postprocessors"] = [
-            {"format": "jpg", "key": "FFmpegThumbnailsConvertor", "when": "before_dl"}
-        ]
+
+        output_path = Path(paths.get('jpg', '.'))
+        output_template = str(output_path / "%(title)s.%(ext)s")
 
         try:
-            with YoutubeDL(self.ydl_opts) as ydl:
-                ydl.download([link])
-                return "Thumbnail download completed!"
-        except DownloadError as e:
-            return f"Download failed: {e}"
+            process = await asyncio.create_subprocess_exec(
+                str(self.yt_dlp_path),
+                "--skip-download",
+                "--write-thumbnail",
+                "--convert-thumbnails", "jpg",
+                "--ffmpeg-location", str(self.ffmpeg_path.parent),
+                "--output", output_template,
+                "--no-warnings",
+                link,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                error_msg = stderr.decode().strip()
+                return f"Download failed: {error_msg}"
+
+            return "Thumbnail download completed!"
+
+        except Exception as e:
+            return f"Download failed: {str(e)}"
