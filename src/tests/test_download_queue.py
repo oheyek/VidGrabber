@@ -22,7 +22,7 @@ INVALID_YOUTUBE_URLS = [
 def test_add_video_valid_urls(url: str) -> None:
     """Test adding valid video URLs to queue."""
     test_queue = DownloadQueue()
-    assert test_queue.add_video(url, 240) == "Video added to queue"
+    assert test_queue.add_video(url, 240) == "Video added to queue."
 
 
 def test_add_video_queue_limit() -> None:
@@ -37,7 +37,7 @@ def test_add_video_queue_limit() -> None:
 def test_add_video_different_qualities(quality: int) -> None:
     """Test adding videos with different qualities."""
     test_queue = DownloadQueue()
-    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], quality) == "Video added to queue"
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], quality) == "Video added to queue."
 
 
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34, True, False])
@@ -75,8 +75,8 @@ def test_add_video_duplicate_same_quality() -> None:
 def test_add_video_duplicate_different_quality() -> None:
     """Test adding same video with different quality."""
     test_queue = DownloadQueue()
-    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 240) == "Video added to queue"
-    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 480) == "Video added to queue"
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 240) == "Video added to queue."
+    assert test_queue.add_video(VALID_YOUTUBE_URLS[0], 480) == "Video added to queue."
 
 
 
@@ -85,7 +85,7 @@ def test_add_video_duplicate_different_quality() -> None:
 def test_add_mp3_audio_valid_urls(url: str) -> None:
     """Test adding valid URLs to MP3 queue."""
     test_queue = DownloadQueue()
-    assert test_queue.add_mp3_audio(url) == "Audio added to queue"
+    assert test_queue.add_mp3_audio(url) == "Audio added to queue."
 
 
 def test_add_mp3_audio_queue_limit() -> None:
@@ -114,7 +114,7 @@ def test_add_mp3_audio_empty_url() -> None:
 def test_add_wav_audio_valid_urls(url: str) -> None:
     """Test adding valid URLs to WAV queue."""
     test_queue = DownloadQueue()
-    assert test_queue.add_wav_audio(url) == "Audio added to queue"
+    assert test_queue.add_wav_audio(url) == "Audio added to queue."
 
 
 def test_add_wav_audio_queue_limit() -> None:
