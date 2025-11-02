@@ -5,4 +5,5 @@ pluggy==1.6.0
 pygments==2.19.2
 pyperclip==1.11.0
 pytest==8.4.2
+pytest-asyncio==1.2.0
 yt-dlp==2025.10.22
