@@ -19,3 +19,13 @@ def get_binaries_dir() -> Path:
         return base_dir / "linux"
     else:
         raise OSError(f"Unsupported platform: {system}")
+
+def get_yt_dlp_path() -> Path:
+    """
+    Function to return the path to yt-dlp binary.
+    :return: yt-dlp binary path basing on platform.
+    """
+    binaries_dir = get_binaries_dir()
+    if platform.system().lower() == "windows":
+        return binaries_dir / "yt-dlp.exe"
+    return binaries_dir / "yt-dlp"
