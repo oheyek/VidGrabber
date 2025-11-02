@@ -22,21 +22,29 @@ INVALID_YOUTUBE_URLS = [
     "ftp://youtube.com/watch?v=test",
 ]
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-def test_extract_tags_valid_links(url: str) -> None:
+async def test_extract_tags_valid_links(url: str) -> None:
     """Test for extracting tags with valid links"""
-    assert tag_extractor.extract_tags(url) == "Tags saved to file and copied to clipboard!"
+    result = await tag_extractor.extract_tags(url)
+    assert result == "Tags saved to file and copied to clipboard!"
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-def test_extract_tags_invalid_links(url: str) -> None:
+async def test_extract_tags_invalid_links(url: str) -> None:
     """Test for extracting tags with invalid links"""
-    assert tag_extractor.extract_tags(url) == "Invalid link provided."
+    result = await tag_extractor.extract_tags(url)
+    assert result == "Invalid link provided."
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-def test_extract_tags_invalid_input_types(invalid_input) -> None:
+async def test_extract_tags_invalid_input_types(invalid_input) -> None:
     """Test for extracting tag with invalid YouTube URLs."""
-    assert tag_extractor.extract_tags(invalid_input) == "Invalid link provided."
+    result = await tag_extractor.extract_tags(invalid_input)
+    assert result == "Invalid link provided."
 
-def test_extract_tags_empty_url() -> None:
+@pytest.mark.asyncio
+async def test_extract_tags_empty_url() -> None:
     """Test that empty string is rejected while downloading."""
-    assert tag_extractor.extract_tags("") == "Invalid link provided."
+    result = await tag_extractor.extract_tags("")
+    assert  result == "Invalid link provided."
