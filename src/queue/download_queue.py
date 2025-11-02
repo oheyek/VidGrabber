@@ -1,3 +1,5 @@
+import asyncio
+
 from src.downloader import Downloader
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
@@ -92,3 +94,98 @@ class DownloadQueue:
         self.thumbnail_queue.append(link)
         return "Thumbnail added to queue"
 
+    @log_call
+    def add_tags(self, link: str) -> str:
+        """
+        Method to add tags to a queue list.
+        :param link: The tags link.
+        :return: Information whether the tags have been added to queue or the queue limit has been reached.
+        """
+        if not isinstance(link, str) or not link:
+            return "Invalid link provided."
+        if len(self.tags_queue) >= self.max_downloads:
+            return "Queue limit reached."
+        self.tags_queue.append(link)
+        return "Tags added to queue"
+
+    @log_call
+    async def start_queue(self, queue_type: str) -> str:
+        """
+        Asynchronous method to start queue with a desired queue type.
+        :param queue_type: Type of the files we want to download (MP4, MP3, WAV, JPG or TAGS)
+        :return: Success or failure message.
+        """
+        sem = asyncio.Semaphore(self.max_downloads)
+
+        async def _run_with_semaphore(coro):
+            async with sem:
+                return await coro
+
+        if queue_type == "mp4":
+            if not self.videos_queue:
+                return "Nothing to download, queue is empty."
+            tasks = [
+                asyncio.create_task(_run_with_semaphore(self.downloader.download_video(link, quality)))
+                for link, qualities in self.videos_queue.items()
+                for quality in qualities
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                print(result)
+            self.videos_queue = {}
+            return "All video downloads have been finished."
+
+        elif queue_type == "mp3":
+            if not self.mp3_queue:
+                return "Nothing to download, queue is empty."
+            tasks = [
+                asyncio.create_task(_run_with_semaphore(self.downloader.download_audio(link, "mp3")))
+                for link in self.mp3_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                print(result)
+            self.mp3_queue = []
+            return "All audio downloads have been finished."
+
+        elif queue_type == "wav":
+            if not self.wav_queue:
+                return "Nothing to download, queue is empty."
+            tasks = [
+                asyncio.create_task(_run_with_semaphore(self.downloader.download_audio(link, "wav")))
+                for link in self.wav_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                print(result)
+            self.wav_queue = []
+            return "All audio downloads have been finished."
+
+        elif queue_type == "jpg":
+            if not self.thumbnail_queue:
+                return "Nothing to download, queue is empty."
+            tasks = [
+                asyncio.create_task(_run_with_semaphore(self.thumbnail_downloader.download_thumbnail(link)))
+                for link in self.thumbnail_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
+            self.thumbnail_queue = []
+            return "All thumbnail downloads have been finished."
+
+        elif queue_type == "csv":
+            if not self.tags_queue:
+                return "Nothing to download, queue is empty."
+            tasks = [
+                asyncio.create_task(_run_with_semaphore(self.tag_extractor.extract_tags(link, False)))
+                for link in self.tags_queue
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for r in results:
+                print(r)
+            self.tags_queue = []
+            return "All tag extractions have been finished."
+
+        else:
+            return "Invalid queue type."

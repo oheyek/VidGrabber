@@ -48,6 +48,7 @@ class Downloader:
                 "--output", output_template,
                 "--no-warnings",
                 "--newline",
+                "--quiet",
                 link,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
@@ -107,6 +108,7 @@ class Downloader:
                 "--output", output_template,
                 "--no-warnings",
                 "--newline",
+                "--quiet",
                 link,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
