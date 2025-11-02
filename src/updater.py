@@ -1,6 +1,8 @@
 import asyncio
 import os
 import platform
+import sys
+import socket
 from pathlib import Path
 
 
@@ -50,6 +52,39 @@ def ensure_executable(file_path: Path):
             os.chmod(file_path, 0o755)
         except Exception as e:
             print(f"Can't modify permissions to {file_path}: {e}")
+
+
+def is_internet_available(timeout: float = 3.0) -> bool:
+    """
+    Quick check for internet connectivity by opening a UDP/TCP socket to a public DNS.
+    """
+    try:
+        conn = socket.create_connection(("8.8.8.8", 53), timeout=timeout)
+        conn.close()
+        return True
+    except OSError:
+        return False
+
+
+def check_file_or_exit(path: Path, name: str) -> None:
+    """
+    Ensure that the given binary exists and is executable (where applicable).
+    Exit the program immediately on failure.
+    """
+    if not path.exists():
+        print(f"Error: {name} not found at {path}")
+        sys.exit(1)
+
+    if platform.system().lower() != "windows":
+        if not os.access(path, os.X_OK):
+            try:
+                ensure_executable(path)
+            except Exception:
+                print(f"Error: {name} at {path} is not executable and permissions couldn't be changed.")
+                sys.exit(1)
+        if not os.access(path, os.X_OK):
+            print(f"Error: {name} at {path} is not executable.")
+            sys.exit(1)
 
 
 async def check_yt_dlp_version() -> str:
@@ -129,7 +164,21 @@ async def verify_ffmpeg() -> bool:
 async def initialize_binaries() -> None:
     """
     Initialize and verify all binaries in parallel.
+    Exits the program immediately if prerequisites are not met.
     """
+    # Synchronous prerequisite checks that terminate the program on failure
+    if not is_internet_available():
+        print("Error: No internet connection detected. Exiting.")
+        sys.exit(1)
+
+    try:
+        check_file_or_exit(get_yt_dlp_path(), "yt-dlp")
+        check_file_or_exit(get_ffmpeg_path(), "ffmpeg")
+    except OSError as e:
+        print(f"Error determining binaries directory: {e}")
+        sys.exit(1)
+
+    # Proceed with async verification and updates
     await asyncio.gather(
         check_yt_dlp_version(),
         verify_ffmpeg()
