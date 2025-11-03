@@ -146,6 +146,7 @@ async def verify_ffmpeg() -> bool:
     """
     try:
         ffmpeg_path = get_ffmpeg_path()
+        ensure_executable(ffmpeg_path)
 
         process = await asyncio.create_subprocess_exec(
             str(ffmpeg_path), "-version",
