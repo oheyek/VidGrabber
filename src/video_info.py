@@ -85,10 +85,11 @@ class VideoInfo:
                 "--no-warnings",
                 "--no-playlist",
                 "--skip-download",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
+                "--ffmpeg-location",
+                str(self.ffmpeg_path.parent),
                 link,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await process.communicate()
@@ -96,7 +97,9 @@ class VideoInfo:
             if process.returncode != 0:
                 error_msg = stderr.decode().strip()
                 if "Private video" in error_msg or "unavailable" in error_msg.lower():
-                    return f"Download error (video may be unavailable or private): {link}"
+                    return (
+                        f"Download error (video may be unavailable or private): {link}"
+                    )
                 return f"Error extracting info: {error_msg}"
 
             info = json.loads(stdout.decode())
@@ -108,7 +111,10 @@ class VideoInfo:
             formats = info.get("formats", [])
 
             for video_format in formats:
-                if video_format.get("vcodec") != "none" and video_format.get("acodec") != "none":
+                if (
+                    video_format.get("vcodec") != "none"
+                    and video_format.get("acodec") != "none"
+                ):
                     height = video_format.get("height")
                     fps = video_format.get("fps")
                     ext = video_format.get("ext")
@@ -117,8 +123,7 @@ class VideoInfo:
                         qualities.add(f"mp4 {height}p {int(fps)}fps")
 
             qualities_list: list[str] = sorted(
-                list(qualities),
-                key=lambda x: int(x.split()[1].rstrip("p"))
+                list(qualities), key=lambda x: int(x.split()[1].rstrip("p"))
             )
 
             seconds: int = info.get("duration", 0)

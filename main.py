@@ -18,14 +18,14 @@ async def main() -> None:
     # await initialize_binaries()
     # print("=" * 50)
     # print()
-    # interface: AppUI = AppUI()
-    # interface.mainloop()
+    interface: AppUI = AppUI()
+    interface.mainloop()
 
-    video_info: VideoInfo = VideoInfo()
+    # video_info: VideoInfo = VideoInfo()
     # queue: DownloadQueue = DownloadQueue()
 
-    for information in await video_info.get_video_info(LINK):
-        print(information)
+    # for information in await video_info.get_video_info(LINK):
+    #     print(information)
 
     # print(queue.add_video(LINK, 240))
     # print(queue.add_video(LINK, 360))
@@ -49,15 +49,15 @@ async def main() -> None:
     # print(queue.add_tags(LINK3))
 
     # results = await asyncio.gather(
-        # queue.start_queue("mp4"),
-        # queue.start_queue("mp3"),
-        # queue.start_queue("wav"),
-        # queue.start_queue("jpg"),
-        # queue.start_queue("csv"),
+    #     queue.start_queue("mp4"),
+    #     queue.start_queue("mp3"),
+    #     queue.start_queue("wav"),
+    #     queue.start_queue("jpg"),
+    #     queue.start_queue("csv"),
     # )
 
     # for result in results:
-        # print(result)
+    #     print(result)
 
 
 if __name__ == "__main__":

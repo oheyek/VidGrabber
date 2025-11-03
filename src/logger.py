@@ -1,15 +1,17 @@
 import functools
 import asyncio
 import logging
+from logging import Logger
+from pathlib import Path
 from typing import Any, Coroutine
 from .path_manager import PathManager
 
 path_manager: PathManager = PathManager()
 
-LOG_FILE = path_manager.settings_dir / "logs.log"
+LOG_FILE: Path = path_manager.settings_dir / "logs.log"
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-logger = logging.getLogger("project_logger")
+logger: Logger = logging.getLogger("project_logger")
 if not logger.handlers:
     handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"))
@@ -27,12 +29,12 @@ def log_call(func):
     @functools.wraps(func)
     def wrapper(*args: object, **kwargs: object) -> Coroutine[Any, Any, Any] | Any:
         try:
-            parts = [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
-            args_str = ", ".join(parts)
+            parts: list[str] = [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
+            args_str: str = ", ".join(parts)
         except Exception:
             args_str = "<unrepresentable args>"
 
-        func_name = f"{func.__module__}.{func.__name__}"
+        func_name: str = f"{func.__module__}.{func.__name__}"
 
         try:
             result = func(*args, **kwargs)

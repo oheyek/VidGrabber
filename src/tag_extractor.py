@@ -1,6 +1,8 @@
 import asyncio
 import json
+from asyncio.subprocess import Process
 from pathlib import Path
+from typing import Any, LiteralString
 
 import pyperclip
 
@@ -18,10 +20,10 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> 
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
     """
-    output_path = Path(paths.get("tags", "."))
+    output_path: Path = Path(paths.get("tags", "."))
     output_path.mkdir(parents=True, exist_ok=True)
 
-    tags_text = "".join(f"{tag},\n" for tag in tags)
+    tags_text: str = "".join(f"{tag},\n" for tag in tags)
 
     with open(output_path / f"{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
         f.write(tags_text)
@@ -56,7 +58,7 @@ class TagExtractor:
             return "Invalid link provided."
 
         try:
-            process = await  asyncio.create_subprocess_exec(
+            process: Process = await  asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--dump-json",
                 "--no-warnings",
@@ -73,8 +75,8 @@ class TagExtractor:
                 error_msg = stderr.decode().strip()
                 return f"Download failed: {error_msg}"
             info = json.loads(stdout.decode())
-            tags = info.get("tags") or []
-            title = (info.get("title") or "").replace(" ","_")
+            tags: list[Any] | Any = info.get("tags") or []
+            title: LiteralString = (info.get("title") or "").replace(" ","_")
 
             return save_tags_and_copy_to_clipboard(tags, title, copy)
 
