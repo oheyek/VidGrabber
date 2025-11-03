@@ -54,22 +54,20 @@ def ensure_executable(file_path: Path):
             print(f"Can't modify permissions to {file_path}: {e}")
 
 
-def is_internet_available(timeout: float = 3.0) -> bool:
+def is_internet_available(timeout: float = 10.0) -> bool:
     """
-    Quick check for internet connectivity by opening a UDP/TCP socket to a public DNS.
+    Quick check for internet connectivity via HTTP request.
     """
-    hosts = [
-        ("8.8.8.8", 53),  # Google DNS
-        ("1.1.1.1", 53),  # Cloudflare DNS
-        ("208.67.222.222", 53),  # OpenDNS
-    ]
+    import urllib.request
 
-    for host, port in hosts:
+    urls = ["https://www.google.com", "https://www.cloudflare.com", "https://1.1.1.1"]
+
+    for url in urls:
         try:
-            conn = socket.create_connection((host, port), timeout=timeout)
-            conn.close()
+            req = urllib.request.Request(url, method="HEAD")
+            urllib.request.urlopen(req, timeout=timeout)
             return True
-        except OSError:
+        except Exception:
             continue
 
     return False
