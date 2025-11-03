@@ -58,12 +58,21 @@ def is_internet_available(timeout: float = 3.0) -> bool:
     """
     Quick check for internet connectivity by opening a UDP/TCP socket to a public DNS.
     """
-    try:
-        conn = socket.create_connection(("8.8.8.8", 53), timeout=timeout)
-        conn.close()
-        return True
-    except OSError:
-        return False
+    hosts = [
+        ("8.8.8.8", 53),  # Google DNS
+        ("1.1.1.1", 53),  # Cloudflare DNS
+        ("208.67.222.222", 53),  # OpenDNS
+    ]
+
+    for host, port in hosts:
+        try:
+            conn = socket.create_connection((host, port), timeout=timeout)
+            conn.close()
+            return True
+        except OSError:
+            continue
+
+    return False
 
 
 def check_file_or_exit(path: Path, name: str) -> None:
