@@ -164,8 +164,8 @@ async def verify_ffmpeg() -> bool:
 
         print("ffmpeg is available.")
         return True
-    except Exception:
-        print(f"Warning: ffmpeg not found in {get_ffmpeg_path()}")
+    except Exception as e:
+        print(f"Warning: ffmpeg not found in {get_ffmpeg_path()}: {e}")
         return False
 
 
