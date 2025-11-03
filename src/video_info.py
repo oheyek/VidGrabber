@@ -1,5 +1,7 @@
 import json
 import asyncio
+from asyncio.subprocess import Process
+from pathlib import Path
 from typing import List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
@@ -7,6 +9,9 @@ from src.updater import get_yt_dlp_path, get_ffmpeg_path
 
 
 class VideoInfo:
+    ffmpeg_path: Path
+    yt_dlp_path: Path
+
     def __init__(self) -> None:
         """
         Constructor of a VideoInfo class.
@@ -22,7 +27,7 @@ class VideoInfo:
         :return: Whether the link is a valid YouTube link or not.
         """
         try:
-            link = link.strip()
+            link: str = link.strip()
             if not link.startswith(("http://", "https://")):
                 link = "https://" + link
             return link.startswith(
@@ -45,7 +50,7 @@ class VideoInfo:
         if not self.validator(url):
             return None
         try:
-            url = url.strip()
+            url: str = url.strip()
             if not url.startswith(("http://", "https://")):
                 url = "https://" + url
             parsed = urlparse(url)
@@ -74,7 +79,7 @@ class VideoInfo:
             return "Invalid link provided."
 
         try:
-            process = await asyncio.create_subprocess_exec(
+            process: Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--dump-json",
                 "--no-warnings",
@@ -111,7 +116,7 @@ class VideoInfo:
                     if height and fps and ext == "mp4":
                         qualities.add(f"mp4 {height}p {int(fps)}fps")
 
-            qualities_list = sorted(
+            qualities_list: list[str] = sorted(
                 list(qualities),
                 key=lambda x: int(x.split()[1].rstrip("p"))
             )
