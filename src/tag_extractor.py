@@ -1,6 +1,5 @@
 import asyncio
 import json
-from asyncio.subprocess import Process
 from pathlib import Path
 from typing import Any, LiteralString
 
@@ -58,7 +57,7 @@ class TagExtractor:
             return "Invalid link provided."
 
         try:
-            process: Process = await  asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await  asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--dump-json",
                 "--no-warnings",

@@ -1,5 +1,4 @@
 import asyncio
-from asyncio.subprocess import Process
 from pathlib import Path
 
 from .path_manager import PathManager
@@ -33,7 +32,7 @@ class ThumbnailDownloader:
         output_template: str = str(output_path / "%(title)s.%(ext)s")
 
         try:
-            process: Process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--skip-download",
                 "--write-thumbnail",

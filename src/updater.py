@@ -2,7 +2,6 @@ import asyncio
 import os
 import platform
 import sys
-from asyncio.subprocess import Process
 from pathlib import Path
 from urllib.request import Request
 
@@ -110,7 +109,7 @@ async def check_yt_dlp_version() -> str:
         yt_dlp_path: Path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
 
-        process: Process = await asyncio.create_subprocess_exec(
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
             str(yt_dlp_path),
             "--version",
             stdout=asyncio.subprocess.PIPE,
@@ -136,7 +135,7 @@ async def update_yt_dlp() -> bool:
         ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
 
-        process: Process = await asyncio.create_subprocess_exec(
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
             str(yt_dlp_path),
             "-U",
             stdout=asyncio.subprocess.PIPE,

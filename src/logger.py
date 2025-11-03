@@ -1,7 +1,6 @@
 import functools
 import asyncio
 import logging
-from logging import Logger
 from pathlib import Path
 from typing import Any, Coroutine
 from .path_manager import PathManager
@@ -11,7 +10,7 @@ path_manager: PathManager = PathManager()
 LOG_FILE: Path = path_manager.settings_dir / "logs.log"
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-logger: Logger = logging.getLogger("project_logger")
+logger: logging.Logger = logging.getLogger("project_logger")
 if not logger.handlers:
     handler = logging.FileHandler(LOG_FILE, mode="a", encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"))

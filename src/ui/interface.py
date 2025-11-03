@@ -1,17 +1,14 @@
-from threading import Thread
-
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkLabel, CTkEntry, CTkButton
 from src.video_info import VideoInfo
 import asyncio
 import threading
 
 
 class AppUI(ctk.CTk):
-    video_info_button: CTkButton
-    link_field: CTkEntry
-    download_info: CTkLabel
-    main_frame: CTkFrame
+    video_info_button: ctk.CTkButton
+    link_field: ctk.CTkEntry
+    download_info: ctk.CTkLabel
+    main_frame: ctk.CTkFrame
 
     def __init__(self) -> None:
         """
@@ -36,7 +33,7 @@ class AppUI(ctk.CTk):
           \  $/   | $$|  $$$$$$$|  $$$$$$/| $$     |  $$$$$$$| $$$$$$$/| $$$$$$$/|  $$$$$$$| $$
            \_/    |__/ \_______/ \______/ |__/      \_______/|_______/ |_______/  \_______/|__/"""
 
-        ascii_label: CTkLabel = ctk.CTkLabel(
+        ascii_label: ctk.CTkLabel = ctk.CTkLabel(
             self.main_frame,
             text=ascii_art,
             font=ctk.CTkFont(family="Courier", size=12, weight="bold"),
@@ -74,7 +71,7 @@ class AppUI(ctk.CTk):
         """
         self.video_info_button.configure(state="disabled")
         self.download_info.configure(text="Downloading video data...")
-        thread: Thread = threading.Thread(target=self._run_async_task, daemon=True)
+        thread: threading.Thread = threading.Thread(target=self._run_async_task, daemon=True)
         thread.start()
 
     def _run_async_task(self) -> None:

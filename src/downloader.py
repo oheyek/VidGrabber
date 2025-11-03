@@ -1,6 +1,5 @@
 import asyncio
 import sys
-from asyncio.subprocess import Process
 from pathlib import Path
 
 from .path_manager import PathManager
@@ -44,7 +43,7 @@ class Downloader:
         )
 
         try:
-            process: Process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--format",
                 f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
@@ -106,7 +105,7 @@ class Downloader:
         output_template: str = str(Path(download_path) / "%(title)s.%(ext)s")
 
         try:
-            process: Process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--format",
                 "bestaudio/best",

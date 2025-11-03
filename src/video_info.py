@@ -1,6 +1,5 @@
 import json
 import asyncio
-from asyncio.subprocess import Process
 from pathlib import Path
 from typing import List, Optional, Union
 from urllib.parse import parse_qs, urlparse
@@ -79,7 +78,7 @@ class VideoInfo:
             return "Invalid link provided."
 
         try:
-            process: Process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--dump-json",
                 "--no-warnings",

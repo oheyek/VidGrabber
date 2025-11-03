@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import Semaphore, Task
 from typing import Any
 
 from src.downloader import Downloader
@@ -117,7 +116,7 @@ class DownloadQueue:
         :param queue_type: Type of the files we want to download (MP4, MP3, WAV, JPG or TAGS)
         :return: Success or failure message.
         """
-        sem: Semaphore = asyncio.Semaphore(self.max_downloads)
+        sem: asyncio.Semaphore = asyncio.Semaphore(self.max_downloads)
 
         async def _run_with_semaphore(coro):
             async with sem:
@@ -126,7 +125,7 @@ class DownloadQueue:
         if queue_type == "mp4":
             if not self.videos_queue:
                 return "Nothing to download, queue is empty."
-            tasks: list[Task[Any]] = [
+            tasks: list[asyncio.Task[Any]] = [
                 asyncio.create_task(_run_with_semaphore(self.downloader.download_video(link, quality)))
                 for link, qualities in self.videos_queue.items()
                 for quality in qualities
