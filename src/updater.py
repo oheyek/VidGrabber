@@ -2,10 +2,12 @@ import asyncio
 import os
 import platform
 import sys
+from functools import lru_cache
 from pathlib import Path
 from urllib.request import Request
 
 
+@lru_cache(maxsize=1)
 def get_binaries_dir() -> Path:
     """
     Function to return binaries path basing on the used system.
@@ -24,6 +26,7 @@ def get_binaries_dir() -> Path:
         raise OSError(f"Unsupported platform: {system}")
 
 
+@lru_cache(maxsize=1)
 def get_yt_dlp_path() -> Path:
     """
     Function to return the path to yt-dlp binary.
@@ -35,6 +38,7 @@ def get_yt_dlp_path() -> Path:
     return binaries_dir / "yt-dlp"
 
 
+@lru_cache(maxsize=1)
 def get_ffmpeg_path() -> Path:
     """
     Function to return the path to ffmpeg binary.

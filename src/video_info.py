@@ -1,10 +1,11 @@
-import json
 import asyncio
+import json
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
-from src.updater import get_yt_dlp_path, get_ffmpeg_path
+from src.updater import get_ffmpeg_path, get_yt_dlp_path
 
 
 class VideoInfo:
@@ -19,6 +20,7 @@ class VideoInfo:
         self.ffmpeg_path = get_ffmpeg_path()
 
     @staticmethod
+    @lru_cache(maxsize=128)
     def validator(link: str) -> bool:
         """
         Method to validate YouTube link format.
