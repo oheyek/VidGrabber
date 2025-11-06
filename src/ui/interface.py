@@ -1,7 +1,9 @@
-import customtkinter as ctk
-from src.video_info import VideoInfo
 import asyncio
 import threading
+
+import customtkinter as ctk
+
+from src.video_info import VideoInfo
 
 
 class AppUI(ctk.CTk):
@@ -71,7 +73,9 @@ class AppUI(ctk.CTk):
         """
         self.video_info_button.configure(state="disabled")
         self.download_info.configure(text="Downloading video data...")
-        thread: threading.Thread = threading.Thread(target=self._run_async_task, daemon=True)
+        thread: threading.Thread = threading.Thread(
+            target=self._run_async_task, daemon=True
+        )
         thread.start()
 
     def _run_async_task(self) -> None:
