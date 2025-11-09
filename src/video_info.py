@@ -112,10 +112,7 @@ class VideoInfo:
             formats = info.get("formats", [])
 
             for video_format in formats:
-                if (
-                    video_format.get("vcodec") != "none"
-                    and video_format.get("acodec") != "none"
-                ):
+                if video_format.get("vcodec") != "none":
                     height = video_format.get("height")
                     fps = video_format.get("fps")
                     ext = video_format.get("ext")

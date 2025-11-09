@@ -3,10 +3,10 @@ import threading
 
 import customtkinter as ctk
 
-from src.tag_extractor import TagExtractor
-from src.video_info import VideoInfo
-from src.thumbnail_downloader import ThumbnailDownloader
 from src.downloader import Downloader
+from src.tag_extractor import TagExtractor
+from src.thumbnail_downloader import ThumbnailDownloader
+from src.video_info import VideoInfo
 
 
 class AppUI(ctk.CTk):
@@ -14,6 +14,8 @@ class AppUI(ctk.CTk):
     link_field: ctk.CTkEntry
     download_info: ctk.CTkLabel
     main_frame: ctk.CTkFrame
+    available_qualities: list[str] = []
+    current_link: str = ""
 
     def __init__(self) -> None:
         """
@@ -75,7 +77,9 @@ class AppUI(ctk.CTk):
         )
         self.video_info_button.pack(side="left")
 
-        operation_row: ctk.CTkFrame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        operation_row: ctk.CTkFrame = ctk.CTkFrame(
+            self.main_frame, fg_color="transparent"
+        )
         operation_row.configure(width=900, height=35)
         operation_row.pack(pady=(5, 10), padx=10, anchor="n")
         operation_row.pack_propagate(False)
@@ -115,6 +119,7 @@ class AppUI(ctk.CTk):
             text="Download video (MP4)",
             width=60,
             height=25,
+            command=self.show_quality_selection,
         )
         self.download_mp4_button.pack(side="left", padx=(10, 0))
         self.download_mp4_button.configure(state="disabled")
@@ -128,6 +133,43 @@ class AppUI(ctk.CTk):
         )
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
+
+    def _run_async_operation(
+        self,
+        button: ctk.CTkButton,
+        loading_msg: str,
+        success_msg: str,
+        error_msg: str,
+        coroutine_func,
+        *args
+    ) -> None:
+        """
+        Universal method to run async operations with UI updates
+        """
+        button.configure(state="disabled")
+        self.download_info.configure(text=loading_msg)
+
+        async def run_operation():
+            result = await coroutine_func(*args)
+
+            if isinstance(result, bool):
+                if result:
+                    self.download_info.configure(text=success_msg)
+                else:
+                    self.download_info.configure(text=error_msg)
+            elif isinstance(result, str):
+                if "completed" in result.lower():
+                    self.download_info.configure(text=success_msg)
+                else:
+                    self.download_info.configure(text=f"{error_msg}: {result}")
+
+            button.configure(state="enabled")
+
+        def run():
+            asyncio.run(run_operation())
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
 
     def handle_get_link_info(self) -> None:
         """
@@ -152,10 +194,17 @@ class AppUI(ctk.CTk):
         Async method to get a title from a YouTube video and display it to UI.
         """
         link: str = self.link_field.get()
+        self.current_link = link
         video_info: VideoInfo = VideoInfo()
-        title: str | list[str] = await video_info.get_video_info(link)
-        if isinstance(title, list):
-            title = title[0]
+        result = await video_info.get_video_info(link)
+
+        if isinstance(result, list):
+            title = result[0]
+            self.available_qualities = [q for q in result[4:] if q.startswith("mp4")]
+        else:
+            title = result
+            self.available_qualities = []
+
         self.download_info.configure(text=title)
         self.video_info_button.configure(state="enabled")
         self.download_thumbnail_button.configure(state="enabled")
@@ -168,141 +217,139 @@ class AppUI(ctk.CTk):
         """
         Synchronous wrapper for the async download_thumbnail method
         """
-        self.download_thumbnail_button.configure(state="disabled")
-        self.download_info.configure(text="Downloading thumbnail...")
-        thread: threading.Thread = threading.Thread(
-            target=self._run_thumbnail_download, daemon=True
+        async def download():
+            link = self.link_field.get()
+            video_info = VideoInfo()
+            thumbnail_downloader = ThumbnailDownloader(video_info=video_info)
+            return await thumbnail_downloader.download_thumbnail(link)
+
+        self._run_async_operation(
+            self.download_thumbnail_button,
+            "Downloading thumbnail...",
+            "Thumbnail downloaded successfully!",
+            "Failed to download thumbnail",
+            download
         )
-        thread.start()
-
-    def _run_thumbnail_download(self) -> None:
-        """
-        Helper method to run thumbnail download in a separate thread
-        """
-        asyncio.run(self.download_thumbnail())
-
-    async def download_thumbnail(self) -> None:
-        """
-        Async method to download thumbnail from YouTube video
-        """
-        link: str = self.link_field.get()
-        video_info: VideoInfo = VideoInfo()
-        thumbnail_downloader: ThumbnailDownloader = ThumbnailDownloader(
-            video_info=video_info
-        )
-        success: bool = await thumbnail_downloader.download_thumbnail(link)
-
-        if success:
-            self.download_info.configure(text="Thumbnail downloaded successfully!")
-        else:
-            self.download_info.configure(text="Failed to download thumbnail")
-
-        self.download_thumbnail_button.configure(state="enabled")
 
     def handle_download_mp3(self) -> None:
         """
         Synchronous wrapper for the async download_mp3 method
         """
-        self.download_mp3_button.configure(state="disabled")
-        self.download_info.configure(text="Downloading MP3 audio...")
-        thread: threading.Thread = threading.Thread(
-            target=self._run_mp3_download, daemon=True
+        async def download():
+            link = self.link_field.get()
+            video_info = VideoInfo()
+            mp3_downloader = Downloader(video_info=video_info)
+            return await mp3_downloader.download_audio(link, audio_format="mp3")
+
+        self._run_async_operation(
+            self.download_mp3_button,
+            "Downloading MP3 audio...",
+            "MP3 downloaded successfully!",
+            "Failed to download MP3",
+            download
         )
-        thread.start()
-
-    def _run_mp3_download(self) -> None:
-        """
-        Helper method to run mp3 download in a separate thread
-        """
-        asyncio.run(self.download_mp3())
-
-    async def download_mp3(self) -> None:
-        """
-        Async method to download mp3 from YouTube video
-        """
-        link: str = self.link_field.get()
-        video_info: VideoInfo = VideoInfo()
-        mp3_downloader: Downloader = Downloader(
-            video_info=video_info
-        )
-        success: bool = await mp3_downloader.download_audio(link, audio_format="mp3")
-
-        if success:
-            self.download_info.configure(text="MP3 downloaded successfully!")
-        else:
-            self.download_info.configure(text="Failed to download MP3")
-
-        self.download_mp3_button.configure(state="enabled")
 
     def handle_download_wav(self) -> None:
         """
         Synchronous wrapper for the async download_wav method
         """
-        self.download_wav_button.configure(state="disabled")
-        self.download_info.configure(text="Downloading WAV audio...")
-        thread: threading.Thread = threading.Thread(
-            target=self._run_wav_download, daemon=True
+        async def download():
+            link = self.link_field.get()
+            video_info = VideoInfo()
+            wav_downloader = Downloader(video_info=video_info)
+            return await wav_downloader.download_audio(link, audio_format="wav")
+
+        self._run_async_operation(
+            self.download_wav_button,
+            "Downloading WAV audio...",
+            "WAV downloaded successfully!",
+            "Failed to download WAV",
+            download
         )
-        thread.start()
-
-    def _run_wav_download(self) -> None:
-        """
-        Helper method to run wav download in a separate thread
-        """
-        asyncio.run(self.download_wav())
-
-    async def download_wav(self) -> None:
-        """
-        Async method to download wav from YouTube video
-        """
-        link: str = self.link_field.get()
-        video_info: VideoInfo = VideoInfo()
-        wav_downloader: Downloader = Downloader(
-            video_info=video_info
-        )
-        success: bool = await wav_downloader.download_audio(link, audio_format="wav")
-
-        if success:
-            self.download_info.configure(text="WAV downloaded successfully!")
-        else:
-            self.download_info.configure(text="Failed to download WAV")
-
-        self.download_wav_button.configure(state="enabled")
 
     def handle_extract_tags(self) -> None:
         """
         Synchronous wrapper for the async extract_tags method
         """
-        self.download_tags_button.configure(state="disabled")
-        self.download_info.configure(text="Extracting video tags...")
-        thread: threading.Thread = threading.Thread(
-            target=self._run_tags_extract, daemon=True
+        async def extract():
+            link = self.link_field.get()
+            video_info = VideoInfo()
+            tag_extract = TagExtractor(video_info=video_info)
+            return await tag_extract.extract_tags(link)
+
+        self._run_async_operation(
+            self.download_tags_button,
+            "Extracting video tags...",
+            "Tags extracted to file and copied to clipboard!",
+            "Failed to extract tags",
+            extract
         )
-        thread.start()
 
-    def _run_tags_extract(self) -> None:
+    def show_quality_selection(self) -> None:
         """
-        Helper method to run tags extract in a separate thread
+        Show quality selection dialog
         """
-        asyncio.run(self.extract_tags())
+        if not self.available_qualities:
+            self.download_info.configure(text="No quality options available")
+            return
 
-    async def extract_tags(self) -> None:
-        """
-        Async method to extract tags from YouTube video
-        """
-        link: str = self.link_field.get()
-        video_info: VideoInfo = VideoInfo()
-        tag_extract: TagExtractor = TagExtractor(
-            video_info=video_info
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Select Video Quality")
+        dialog.geometry("400x400")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        label = ctk.CTkLabel(
+            dialog,
+            text="Select video quality:",
+            font=ctk.CTkFont(size=14, weight="bold"),
         )
-        success: bool = await tag_extract.extract_tags(link)
+        label.pack(pady=20)
 
-        if success:
-            self.download_info.configure(text="Tags extracted to file and copied to clipboard!")
-        else:
-            self.download_info.configure(text="Failed to extract tags")
+        selected_quality = ctk.StringVar(value=self.available_qualities[0])
 
-        self.download_tags_button.configure(state="enabled")
+        for quality in self.available_qualities:
+            radio = ctk.CTkRadioButton(
+                dialog,
+                text=quality,
+                variable=selected_quality,
+                value=quality,
+                font=ctk.CTkFont(size=12),
+            )
+            radio.pack(pady=5)
 
+        def on_download():
+            quality = selected_quality.get()
+            dialog.destroy()
+            self.handle_download_mp4(quality)
 
+        button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        button_frame.pack(pady=20)
 
+        cancel_btn = ctk.CTkButton(
+            button_frame, text="Cancel", command=dialog.destroy, width=100
+        )
+        cancel_btn.pack(side="left", padx=5)
+
+        download_btn = ctk.CTkButton(
+            button_frame, text="Download", command=on_download, width=100
+        )
+        download_btn.pack(side="left", padx=5)
+
+    def handle_download_mp4(self, quality: str) -> None:
+        """
+        Synchronous wrapper for the async download_mp4 method
+        """
+        async def download():
+            quality_height = int(quality.split()[1].rstrip("p"))
+            video_info = VideoInfo()
+            mp4_downloader = Downloader(video_info=video_info)
+            return await mp4_downloader.download_video(self.current_link, quality=quality_height)
+
+        self._run_async_operation(
+            self.download_mp4_button,
+            f"Downloading MP4 ({quality})...",
+            f"MP4 ({quality}) downloaded successfully!",
+            "Failed to download MP4",
+            download
+        )

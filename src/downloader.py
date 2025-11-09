@@ -29,7 +29,17 @@ class Downloader:
         if not isinstance(quality, int):
             return "Incorrect video quality."
 
-        allowed_qualities: list[int] = [144, 240, 360, 480, 720, 1080, 1440, 2160]
+        allowed_qualities: list[int] = [
+            144,
+            240,
+            360,
+            480,
+            720,
+            1080,
+            1440,
+            2160,
+        ]
+
         if quality not in allowed_qualities:
             return "Incorrect video quality."
 
