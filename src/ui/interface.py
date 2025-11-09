@@ -5,6 +5,7 @@ import customtkinter as ctk
 
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
+from src.downloader import Downloader
 
 
 class AppUI(ctk.CTk):
@@ -93,6 +94,7 @@ class AppUI(ctk.CTk):
             text="Download audio (MP3)",
             width=60,
             height=25,
+            command=self.handle_download_mp3,
         )
         self.download_mp3_button.pack(side="left", padx=(10, 0))
         self.download_mp3_button.configure(state="disabled")
@@ -124,6 +126,37 @@ class AppUI(ctk.CTk):
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
+    def handle_get_link_info(self) -> None:
+        """
+        Synchronous wrapper for the async get_link_info method
+        Run the async function in a separate thread to avoid event loop conflicts
+        """
+        self.video_info_button.configure(state="disabled")
+        self.download_info.configure(text="Downloading video data...")
+        thread: threading.Thread = threading.Thread(
+            target=self._run_async_task, daemon=True
+        )
+        thread.start()
+
+    def _run_async_task(self) -> None:
+        """
+        Helper method to run async task in a separate thread
+        """
+        asyncio.run(self.get_link_info())
+
+    async def get_link_info(self) -> None:
+        """
+        Async method to get a title from a YouTube video and display it to UI.
+        """
+        link: str = self.link_field.get()
+        video_info: VideoInfo = VideoInfo()
+        title: str | list[str] = await video_info.get_video_info(link)
+        if isinstance(title, list):
+            title = title[0]
+        self.download_info.configure(text=title)
+        self.video_info_button.configure(state="enabled")
+        self.download_thumbnail_button.configure(state="enabled")
+        self.download_mp3_button.configure(state="enabled")
 
     def handle_download_thumbnail(self) -> None:
         """
@@ -160,33 +193,38 @@ class AppUI(ctk.CTk):
 
         self.download_thumbnail_button.configure(state="enabled")
 
-    def handle_get_link_info(self) -> None:
+    def handle_download_mp3(self) -> None:
         """
-        Synchronous wrapper for the async get_link_info method
-        Run the async function in a separate thread to avoid event loop conflicts
+        Synchronous wrapper for the async download_mp3 method
         """
-        self.video_info_button.configure(state="disabled")
-        self.download_info.configure(text="Downloading video data...")
+        self.download_mp3_button.configure(state="disabled")
+        self.download_info.configure(text="Downloading MP3 audio...")
         thread: threading.Thread = threading.Thread(
-            target=self._run_async_task, daemon=True
+            target=self._run_mp3_download, daemon=True
         )
         thread.start()
 
-    def _run_async_task(self) -> None:
+    def _run_mp3_download(self) -> None:
         """
-        Helper method to run async task in a separate thread
+        Helper method to run mp3 download in a separate thread
         """
-        asyncio.run(self.get_link_info())
+        asyncio.run(self.download_mp3())
 
-    async def get_link_info(self) -> None:
+    async def download_mp3(self) -> None:
         """
-        Async method to get a title from a YouTube video and display it to UI.
+        Async method to download mp3 from YouTube video
         """
         link: str = self.link_field.get()
         video_info: VideoInfo = VideoInfo()
-        title: str | list[str] = await video_info.get_video_info(link)
-        if isinstance(title, list):
-            title = title[0]
-        self.download_info.configure(text=title)
-        self.video_info_button.configure(state="enabled")
-        self.download_thumbnail_button.configure(state="enabled")
+        mp3_downloader: Downloader = Downloader(
+            video_info=video_info
+        )
+        success: bool = await mp3_downloader.download_audio(link, audio_format="mp3")
+
+        if success:
+            self.download_info.configure(text="MP3 downloaded successfully!")
+        else:
+            self.download_info.configure(text="Failed to download MP3")
+
+        self.download_mp3_button.configure(state="enabled")
+
