@@ -4,6 +4,7 @@ import threading
 import customtkinter as ctk
 
 from src.video_info import VideoInfo
+from src.thumbnail_downloader import ThumbnailDownloader
 
 
 class AppUI(ctk.CTk):
@@ -82,6 +83,7 @@ class AppUI(ctk.CTk):
             text="Download thumbnail (JPG)",
             width=60,
             height=25,
+            command=self.handle_download_thumbnail,
         )
         self.download_thumbnail_button.pack(side="left")
         self.download_thumbnail_button.configure(state="disabled")
@@ -122,6 +124,42 @@ class AppUI(ctk.CTk):
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
+
+    def handle_download_thumbnail(self) -> None:
+        """
+        Synchronous wrapper for the async download_thumbnail method
+        """
+        self.download_thumbnail_button.configure(state="disabled")
+        self.download_info.configure(text="Downloading thumbnail...")
+        thread: threading.Thread = threading.Thread(
+            target=self._run_thumbnail_download, daemon=True
+        )
+        thread.start()
+
+    def _run_thumbnail_download(self) -> None:
+        """
+        Helper method to run thumbnail download in a separate thread
+        """
+        asyncio.run(self.download_thumbnail())
+
+    async def download_thumbnail(self) -> None:
+        """
+        Async method to download thumbnail from YouTube video
+        """
+        link: str = self.link_field.get()
+        video_info: VideoInfo = VideoInfo()
+        thumbnail_downloader: ThumbnailDownloader = ThumbnailDownloader(
+            video_info=video_info
+        )
+        success: bool = await thumbnail_downloader.download_thumbnail(link)
+
+        if success:
+            self.download_info.configure(text="Thumbnail downloaded successfully!")
+        else:
+            self.download_info.configure(text="Failed to download thumbnail")
+
+        self.download_thumbnail_button.configure(state="enabled")
+
     def handle_get_link_info(self) -> None:
         """
         Synchronous wrapper for the async get_link_info method
@@ -151,3 +189,4 @@ class AppUI(ctk.CTk):
             title = title[0]
         self.download_info.configure(text=title)
         self.video_info_button.configure(state="enabled")
+        self.download_thumbnail_button.configure(state="enabled")
