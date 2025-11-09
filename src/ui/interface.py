@@ -3,6 +3,7 @@ import threading
 
 import customtkinter as ctk
 
+from src.tag_extractor import TagExtractor
 from src.video_info import VideoInfo
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.downloader import Downloader
@@ -123,6 +124,7 @@ class AppUI(ctk.CTk):
             text="Download tags (CSV + Clipboard)",
             width=60,
             height=25,
+            command=self.handle_extract_tags,
         )
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
@@ -159,6 +161,8 @@ class AppUI(ctk.CTk):
         self.download_thumbnail_button.configure(state="enabled")
         self.download_mp3_button.configure(state="enabled")
         self.download_wav_button.configure(state="enabled")
+        self.download_mp4_button.configure(state="enabled")
+        self.download_tags_button.configure(state="enabled")
 
     def handle_download_thumbnail(self) -> None:
         """
@@ -263,5 +267,42 @@ class AppUI(ctk.CTk):
         else:
             self.download_info.configure(text="Failed to download WAV")
 
-        self.download_mp3_button.configure(state="enabled")
+        self.download_wav_button.configure(state="enabled")
+
+    def handle_extract_tags(self) -> None:
+        """
+        Synchronous wrapper for the async extract_tags method
+        """
+        self.download_tags_button.configure(state="disabled")
+        self.download_info.configure(text="Extracting video tags...")
+        thread: threading.Thread = threading.Thread(
+            target=self._run_tags_extract, daemon=True
+        )
+        thread.start()
+
+    def _run_tags_extract(self) -> None:
+        """
+        Helper method to run tags extract in a separate thread
+        """
+        asyncio.run(self.extract_tags())
+
+    async def extract_tags(self) -> None:
+        """
+        Async method to extract tags from YouTube video
+        """
+        link: str = self.link_field.get()
+        video_info: VideoInfo = VideoInfo()
+        tag_extract: TagExtractor = TagExtractor(
+            video_info=video_info
+        )
+        success: bool = await tag_extract.extract_tags(link)
+
+        if success:
+            self.download_info.configure(text="Tags extracted to file and copied to clipboard!")
+        else:
+            self.download_info.configure(text="Failed to extract tags")
+
+        self.download_tags_button.configure(state="enabled")
+
+
 
