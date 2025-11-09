@@ -19,7 +19,7 @@ class AppUI(ctk.CTk):
         super().__init__()
         ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.1)")
-        self.geometry("800x280")
+        self.geometry("1000x280")
         self.resizable(True, True)
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
@@ -73,17 +73,54 @@ class AppUI(ctk.CTk):
         self.video_info_button.pack(side="left")
 
         operation_row: ctk.CTkFrame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        operation_row.configure(width=640, height=35)
+        operation_row.configure(width=900, height=35)
         operation_row.pack(pady=(5, 10), padx=10, anchor="n")
         operation_row.pack_propagate(False)
 
         self.download_thumbnail_button = ctk.CTkButton(
             operation_row,
-            text="Download thumbnail",
-            width=120,
+            text="Download thumbnail (JPG)",
+            width=60,
             height=25,
         )
         self.download_thumbnail_button.pack(side="left")
+        self.download_thumbnail_button.configure(state="disabled")
+
+        self.download_mp3_button = ctk.CTkButton(
+            operation_row,
+            text="Download audio (MP3)",
+            width=60,
+            height=25,
+        )
+        self.download_mp3_button.pack(side="left", padx=(10, 0))
+        self.download_mp3_button.configure(state="disabled")
+
+        self.download_wav_button = ctk.CTkButton(
+            operation_row,
+            text="Download audio (WAV)",
+            width=60,
+            height=25,
+        )
+        self.download_wav_button.pack(side="left", padx=(10, 0))
+        self.download_wav_button.configure(state="disabled")
+
+        self.download_mp4_button = ctk.CTkButton(
+            operation_row,
+            text="Download video (MP4)",
+            width=60,
+            height=25,
+        )
+        self.download_mp4_button.pack(side="left", padx=(10, 0))
+        self.download_mp4_button.configure(state="disabled")
+
+        self.download_tags_button = ctk.CTkButton(
+            operation_row,
+            text="Download tags (CSV + Clipboard)",
+            width=60,
+            height=25,
+        )
+        self.download_tags_button.pack(side="left", padx=(10, 0))
+        self.download_tags_button.configure(state="disabled")
 
     def handle_get_link_info(self) -> None:
         """
