@@ -28,11 +28,11 @@ class ThumbnailDownloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
-        output_path = Path(paths.get('jpg', '.'))
-        output_template = str(output_path / "%(title)s.%(ext)s")
+        output_path: Path = Path(paths.get('jpg', '.'))
+        output_template: str = str(output_path / "%(title)s.%(ext)s")
 
         try:
-            process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--skip-download",
                 "--write-thumbnail",

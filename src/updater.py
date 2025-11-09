@@ -2,16 +2,18 @@ import asyncio
 import os
 import platform
 import sys
-import socket
+from functools import lru_cache
 from pathlib import Path
+from urllib.request import Request
 
 
+@lru_cache(maxsize=1)
 def get_binaries_dir() -> Path:
     """
     Function to return binaries path basing on the used system.
     :return: System path with binaries.
     """
-    base_dir = Path(__file__).parent.parent / "binaries"
+    base_dir: Path = Path(__file__).parent.parent / "binaries"
     system: str = platform.system().lower()
 
     if system == "windows":
@@ -24,23 +26,25 @@ def get_binaries_dir() -> Path:
         raise OSError(f"Unsupported platform: {system}")
 
 
+@lru_cache(maxsize=1)
 def get_yt_dlp_path() -> Path:
     """
     Function to return the path to yt-dlp binary.
     :return: yt-dlp binary path basing on platform.
     """
-    binaries_dir = get_binaries_dir()
+    binaries_dir: Path = get_binaries_dir()
     if platform.system().lower() == "windows":
         return binaries_dir / "yt-dlp.exe"
     return binaries_dir / "yt-dlp"
 
 
+@lru_cache(maxsize=1)
 def get_ffmpeg_path() -> Path:
     """
     Function to return the path to ffmpeg binary.
     :return: ffmpeg binary path basing on platform.
     """
-    binaries_dir = get_binaries_dir()
+    binaries_dir: Path = get_binaries_dir()
     if platform.system().lower() == "windows":
         return binaries_dir / "ffmpeg.exe"
     return binaries_dir / "ffmpeg"
@@ -60,11 +64,15 @@ def is_internet_available(timeout: float = 10.0) -> bool:
     """
     import urllib.request
 
-    urls = ["https://www.google.com", "https://www.cloudflare.com", "https://1.1.1.1"]
+    urls: list[str] = [
+        "https://www.google.com",
+        "https://www.cloudflare.com",
+        "https://1.1.1.1",
+    ]
 
     for url in urls:
         try:
-            req = urllib.request.Request(url, method="HEAD")
+            req: Request = urllib.request.Request(url, method="HEAD")
             urllib.request.urlopen(req, timeout=timeout)
             return True
         except Exception:
@@ -87,7 +95,9 @@ def check_file_or_exit(path: Path, name: str) -> None:
             try:
                 ensure_executable(path)
             except Exception:
-                print(f"Error: {name} at {path} is not executable and permissions couldn't be changed.")
+                print(
+                    f"Error: {name} at {path} is not executable and permissions couldn't be changed."
+                )
                 sys.exit(1)
         if not os.access(path, os.X_OK):
             print(f"Error: {name} at {path} is not executable.")
@@ -100,17 +110,18 @@ async def check_yt_dlp_version() -> str:
     :return: Current version of yt-dlp.
     """
     try:
-        yt_dlp_path = get_yt_dlp_path()
+        yt_dlp_path: Path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
 
-        process = await asyncio.create_subprocess_exec(
-            str(yt_dlp_path), "--version",
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
+            str(yt_dlp_path),
+            "--version",
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, _ = await process.communicate()
 
-        version = stdout.decode().strip()
+        version: str = stdout.decode().strip()
         print(f"Current yt-dlp version: {version}")
         return version
     except Exception as e:
@@ -124,18 +135,19 @@ async def update_yt_dlp() -> bool:
     :return: Bool value whether yt-dlp has been updated.
     """
     try:
-        yt_dlp_path = get_yt_dlp_path()
+        yt_dlp_path: Path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
 
-        process = await asyncio.create_subprocess_exec(
-            str(yt_dlp_path), "-U",
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
+            str(yt_dlp_path),
+            "-U",
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, _ = await process.communicate()
 
-        output = stdout.decode()
+        output: str = stdout.decode()
         if "up to date" in output.lower() or "up-to-date" in output.lower():
             print("yt-dlp is up to date.")
         else:
@@ -152,13 +164,14 @@ async def verify_ffmpeg() -> bool:
     :return: Bool value whether ffmpeg is available.
     """
     try:
-        ffmpeg_path = get_ffmpeg_path()
+        ffmpeg_path: Path = get_ffmpeg_path()
         ensure_executable(ffmpeg_path)
 
         process = await asyncio.create_subprocess_exec(
-            str(ffmpeg_path), "-version",
+            str(ffmpeg_path),
+            "-version",
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         await process.communicate()
 
@@ -187,8 +200,5 @@ async def initialize_binaries() -> None:
         sys.exit(1)
 
     # Proceed with async verification and updates
-    await asyncio.gather(
-        check_yt_dlp_version(),
-        verify_ffmpeg()
-    )
+    await asyncio.gather(check_yt_dlp_version(), verify_ffmpeg())
     await update_yt_dlp()

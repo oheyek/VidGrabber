@@ -1,12 +1,17 @@
-import json
 import asyncio
+import json
+from functools import lru_cache
+from pathlib import Path
 from typing import List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
-from src.updater import get_yt_dlp_path, get_ffmpeg_path
+from src.updater import get_ffmpeg_path, get_yt_dlp_path
 
 
 class VideoInfo:
+    ffmpeg_path: Path
+    yt_dlp_path: Path
+
     def __init__(self) -> None:
         """
         Constructor of a VideoInfo class.
@@ -15,6 +20,7 @@ class VideoInfo:
         self.ffmpeg_path = get_ffmpeg_path()
 
     @staticmethod
+    @lru_cache(maxsize=128)
     def validator(link: str) -> bool:
         """
         Method to validate YouTube link format.
@@ -22,7 +28,7 @@ class VideoInfo:
         :return: Whether the link is a valid YouTube link or not.
         """
         try:
-            link = link.strip()
+            link: str = link.strip()
             if not link.startswith(("http://", "https://")):
                 link = "https://" + link
             return link.startswith(
@@ -45,7 +51,7 @@ class VideoInfo:
         if not self.validator(url):
             return None
         try:
-            url = url.strip()
+            url: str = url.strip()
             if not url.startswith(("http://", "https://")):
                 url = "https://" + url
             parsed = urlparse(url)
@@ -74,16 +80,17 @@ class VideoInfo:
             return "Invalid link provided."
 
         try:
-            process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
                 "--dump-json",
                 "--no-warnings",
                 "--no-playlist",
                 "--skip-download",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
+                "--ffmpeg-location",
+                str(self.ffmpeg_path.parent),
                 link,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await process.communicate()
@@ -91,7 +98,9 @@ class VideoInfo:
             if process.returncode != 0:
                 error_msg = stderr.decode().strip()
                 if "Private video" in error_msg or "unavailable" in error_msg.lower():
-                    return f"Download error (video may be unavailable or private): {link}"
+                    return (
+                        f"Download error (video may be unavailable or private): {link}"
+                    )
                 return f"Error extracting info: {error_msg}"
 
             info = json.loads(stdout.decode())
@@ -103,7 +112,7 @@ class VideoInfo:
             formats = info.get("formats", [])
 
             for video_format in formats:
-                if video_format.get("vcodec") != "none" and video_format.get("acodec") != "none":
+                if video_format.get("vcodec") != "none":
                     height = video_format.get("height")
                     fps = video_format.get("fps")
                     ext = video_format.get("ext")
@@ -111,9 +120,8 @@ class VideoInfo:
                     if height and fps and ext == "mp4":
                         qualities.add(f"mp4 {height}p {int(fps)}fps")
 
-            qualities_list = sorted(
-                list(qualities),
-                key=lambda x: int(x.split()[1].rstrip("p"))
+            qualities_list: list[str] = sorted(
+                list(qualities), key=lambda x: int(x.split()[1].rstrip("p"))
             )
 
             seconds: int = info.get("duration", 0)

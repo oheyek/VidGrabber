@@ -6,7 +6,8 @@ from .path_manager import PathManager
 from .logger import log_call
 from .updater import get_ffmpeg_path, get_yt_dlp_path
 
-path_manager = PathManager()
+path_manager: PathManager = PathManager()
+
 
 class Downloader:
     def __init__(self, video_info) -> None:
@@ -28,7 +29,17 @@ class Downloader:
         if not isinstance(quality, int):
             return "Incorrect video quality."
 
-        allowed_qualities = [144, 240, 360, 480, 720, 1080, 1440, 2160]
+        allowed_qualities: list[int] = [
+            144,
+            240,
+            360,
+            480,
+            720,
+            1080,
+            1440,
+            2160,
+        ]
+
         if quality not in allowed_qualities:
             return "Incorrect video quality."
 
@@ -36,29 +47,35 @@ class Downloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
-        download_path = path_manager.get_download_path("mp4")
-        output_template = str(Path(download_path) / f"%(title)s_{quality}p.%(ext)s")
+        download_path: Path = path_manager.get_download_path("mp4")
+        output_template: str = str(
+            Path(download_path) / f"%(title)s_{quality}p.%(ext)s"
+        )
 
         try:
-            process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
-                "--format", f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
-                "--merge-output-format", "mp4",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
-                "--output", output_template,
+                "--format",
+                f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
+                "--merge-output-format",
+                "mp4",
+                "--ffmpeg-location",
+                str(self.ffmpeg_path.parent),
+                "--output",
+                output_template,
                 "--no-warnings",
                 "--newline",
                 "--quiet",
                 link,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             while True:
                 line = await process.stdout.readline()
                 if not line:
                     break
-                output = line.decode().strip()
+                output: str = line.decode().strip()
                 if output:
                     sys.stdout.write(f"\r{output}")
                     sys.stdout.flush()
@@ -93,25 +110,30 @@ class Downloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
-        audio_format_lower = audio_format.lower()
-        download_path = path_manager.get_download_path(audio_format_lower)
-        output_template = str(Path(download_path) / "%(title)s.%(ext)s")
+        audio_format_lower: str = audio_format.lower()
+        download_path: Path = path_manager.get_download_path(audio_format_lower)
+        output_template: str = str(Path(download_path) / "%(title)s.%(ext)s")
 
         try:
-            process = await asyncio.create_subprocess_exec(
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
                 str(self.yt_dlp_path),
-                "--format", "bestaudio/best",
+                "--format",
+                "bestaudio/best",
                 "--extract-audio",
-                "--audio-format", audio_format_lower,
-                "--audio-quality", "192K",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
-                "--output", output_template,
+                "--audio-format",
+                audio_format_lower,
+                "--audio-quality",
+                "192K",
+                "--ffmpeg-location",
+                str(self.ffmpeg_path.parent),
+                "--output",
+                output_template,
                 "--no-warnings",
                 "--newline",
                 "--quiet",
                 link,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             while True:

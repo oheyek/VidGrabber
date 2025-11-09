@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 
 class PathManager:
@@ -28,7 +28,7 @@ class PathManager:
 
     def _write_default_settings(self) -> None:
         """Write default download paths to settings file."""
-        defaults = {
+        defaults: dict[str, str] = {
             ext: str(Path.home() / "Downloads" / ext)
             for ext in self.DEFAULT_EXTENSIONS
         }
@@ -53,7 +53,7 @@ class PathManager:
             return self.load_settings()
 
         # Convert to Path objects and create directories
-        paths = {}
+        paths: dict[Any, Any] = {}
         for key, value in data.items():
             path = Path(value)
             path.mkdir(parents=True, exist_ok=True)
