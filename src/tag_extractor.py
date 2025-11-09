@@ -1,6 +1,5 @@
 import asyncio
 import json
-import platform
 from pathlib import Path
 from typing import Any, LiteralString
 
@@ -13,15 +12,6 @@ from .updater import get_ffmpeg_path, get_yt_dlp_path
 path_manager: PathManager = PathManager()
 paths = path_manager.load_settings() or {}
 
-def get_system_encoding() -> str:
-    """
-    Get the appropriate encoding for the current system.
-    :return: Encoding string
-    """
-    if platform.system() == 'Windows':
-        return 'cp1252'
-    return 'utf-8'
-
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -32,17 +22,25 @@ def sanitize_filename(filename: str) -> str:
     # Characters forbidden in Windows filenames
     invalid_chars = '<>:"/\\|?*'
 
+    # Replace invalid chars with underscore
     for char in invalid_chars:
         filename = filename.replace(char, "_")
 
+    # Remove/replace problematic Unicode characters
+    filename = filename.encode('ascii', errors='ignore').decode('ascii')
+
     # Remove leading/trailing spaces and dots
     filename = filename.strip(". ")
+
+    # Replace multiple underscores with single one
+    while "__" in filename:
+        filename = filename.replace("__", "_")
 
     # Limit filename length
     if len(filename) > 200:
         filename = filename[:200]
 
-    return filename
+    return filename or "video"
 
 
 def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> str:
@@ -60,7 +58,7 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> 
 
     try:
         with open(
-                output_path / f"{safe_title}_tags.csv", "w", newline="", encoding="utf-8"
+            output_path / f"{safe_title}_tags.csv", "w", newline="", encoding="utf-8"
         ) as f:
             f.write(tags_text)
     except OSError as e:
@@ -109,13 +107,12 @@ class TagExtractor:
             )
 
             stdout, stderr = await process.communicate()
-            encoding = get_system_encoding()
 
             if process.returncode != 0:
-                error_msg = stderr.decode(encoding, errors='replace').strip()
+                error_msg = stderr.decode('utf-8', errors='replace').strip()
                 return f"Download failed: {error_msg}"
 
-            info = json.loads(stdout.decode(encoding, errors='replace'))
+            info = json.loads(stdout.decode('utf-8', errors='replace'))
             tags: list[Any] | Any = info.get("tags") or []
             title: LiteralString = (info.get("title") or "").replace(" ", "_")
 
