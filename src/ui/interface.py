@@ -49,22 +49,28 @@ class AppUI(ctk.CTk):
         )
         self.download_info.pack(pady=(10, 5))
 
+        entry_row: ctk.CTkFrame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        entry_row.configure(width=640, height=35)
+        entry_row.pack(pady=(5, 10), padx=10, anchor="n")
+        entry_row.pack_propagate(False)
+
         self.link_field = ctk.CTkEntry(
-            self.main_frame,
+            entry_row,
             placeholder_text="Paste YouTube video link...",
             width=500,
             height=25,
-            justify="center",
+            justify="left",
         )
-        self.link_field.pack()
+        self.link_field.pack(side="left", padx=(0, 10))
+
         self.video_info_button = ctk.CTkButton(
-            self.main_frame,
+            entry_row,
             text="Grab the video",
-            width=50,
+            width=120,
             height=25,
             command=self.handle_get_link_info,
         )
-        self.video_info_button.pack(pady=(10, 5))
+        self.video_info_button.pack(side="left")
 
     def handle_get_link_info(self) -> None:
         """

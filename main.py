@@ -1,9 +1,9 @@
 import asyncio
 
-from src.video_info import VideoInfo
-from src.updater import initialize_binaries
 from src.queue.download_queue import DownloadQueue
 from src.ui.interface import AppUI
+from src.updater import initialize_binaries
+from src.video_info import VideoInfo
 
 LINK = "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb"
 LINK2 = "https://youtu.be/njX2bu-_Vw4?si=VgF6vfdYZFh9dhPe"
