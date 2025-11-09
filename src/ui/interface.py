@@ -72,6 +72,19 @@ class AppUI(ctk.CTk):
         )
         self.video_info_button.pack(side="left")
 
+        operation_row: ctk.CTkFrame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        operation_row.configure(width=640, height=35)
+        operation_row.pack(pady=(5, 10), padx=10, anchor="n")
+        operation_row.pack_propagate(False)
+
+        self.download_thumbnail_button = ctk.CTkButton(
+            operation_row,
+            text="Download thumbnail",
+            width=120,
+            height=25,
+        )
+        self.download_thumbnail_button.pack(side="left")
+
     def handle_get_link_info(self) -> None:
         """
         Synchronous wrapper for the async get_link_info method
@@ -96,7 +109,7 @@ class AppUI(ctk.CTk):
         """
         link: str = self.link_field.get()
         video_info: VideoInfo = VideoInfo()
-        title: list = await video_info.get_video_info(link)
+        title: str | list[str] = await video_info.get_video_info(link)
         if isinstance(title, list):
             title = title[0]
         self.download_info.configure(text=title)
