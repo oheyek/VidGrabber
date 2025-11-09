@@ -330,6 +330,20 @@ class AppUI(ctk.CTk):
         dialog.geometry("400x400")
         dialog.transient(self)
         dialog.grab_set()
+        dialog.update_idletasks()
+
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+
+        dialog_width = dialog.winfo_width()
+        dialog_height = dialog.winfo_height()
+
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+
+        dialog.geometry(f"+{x}+{y}")
 
         label = ctk.CTkLabel(
             dialog,
