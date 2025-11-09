@@ -134,6 +134,18 @@ class AppUI(ctk.CTk):
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
+    def _set_all_buttons_state(self, state: str) -> None:
+        """
+        Enable or disable all operation buttons.
+        :param: State of the button (disabled/enabled).
+        """
+        self.video_info_button.configure(state=state)
+        self.download_thumbnail_button.configure(state=state)
+        self.download_mp3_button.configure(state=state)
+        self.download_wav_button.configure(state=state)
+        self.download_mp4_button.configure(state=state)
+        self.download_tags_button.configure(state=state)
+
     def _run_async_operation(
         self,
         button: ctk.CTkButton,
@@ -141,12 +153,12 @@ class AppUI(ctk.CTk):
         success_msg: str,
         error_msg: str,
         coroutine_func,
-        *args
+        *args,
     ) -> None:
         """
         Universal method to run async operations with UI updates
         """
-        button.configure(state="disabled")
+        self._set_all_buttons_state("disabled")
         self.download_info.configure(text=loading_msg)
 
         async def run_operation():
@@ -158,12 +170,16 @@ class AppUI(ctk.CTk):
                 else:
                     self.download_info.configure(text=error_msg)
             elif isinstance(result, str):
-                if "completed" in result.lower():
+                if (
+                    "completed" in result.lower()
+                    or "saved to file" in result.lower()
+                    or "copied to clipboard" in result.lower()
+                ):
                     self.download_info.configure(text=success_msg)
                 else:
                     self.download_info.configure(text=f"{error_msg}: {result}")
 
-            button.configure(state="enabled")
+            self._set_all_buttons_state("enabled")
 
         def run():
             asyncio.run(run_operation())
@@ -176,7 +192,7 @@ class AppUI(ctk.CTk):
         Synchronous wrapper for the async get_link_info method
         Run the async function in a separate thread to avoid event loop conflicts
         """
-        self.video_info_button.configure(state="disabled")
+        self._set_all_buttons_state("disabled")
         self.download_info.configure(text="Downloading video data...")
         thread: threading.Thread = threading.Thread(
             target=self._run_async_task, daemon=True
@@ -206,12 +222,7 @@ class AppUI(ctk.CTk):
             self.available_qualities = []
 
         self.download_info.configure(text=title)
-        self.video_info_button.configure(state="enabled")
-        self.download_thumbnail_button.configure(state="enabled")
-        self.download_mp3_button.configure(state="enabled")
-        self.download_wav_button.configure(state="enabled")
-        self.download_mp4_button.configure(state="enabled")
-        self.download_tags_button.configure(state="enabled")
+        self._set_all_buttons_state("enabled")
 
     def handle_download_thumbnail(self) -> None:
         """
