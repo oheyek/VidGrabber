@@ -104,6 +104,7 @@ class AppUI(ctk.CTk):
             text="Download audio (WAV)",
             width=60,
             height=25,
+            command=self.handle_download_wav,
         )
         self.download_wav_button.pack(side="left", padx=(10, 0))
         self.download_wav_button.configure(state="disabled")
@@ -157,6 +158,7 @@ class AppUI(ctk.CTk):
         self.video_info_button.configure(state="enabled")
         self.download_thumbnail_button.configure(state="enabled")
         self.download_mp3_button.configure(state="enabled")
+        self.download_wav_button.configure(state="enabled")
 
     def handle_download_thumbnail(self) -> None:
         """
@@ -225,6 +227,41 @@ class AppUI(ctk.CTk):
             self.download_info.configure(text="MP3 downloaded successfully!")
         else:
             self.download_info.configure(text="Failed to download MP3")
+
+        self.download_mp3_button.configure(state="enabled")
+
+    def handle_download_wav(self) -> None:
+        """
+        Synchronous wrapper for the async download_wav method
+        """
+        self.download_wav_button.configure(state="disabled")
+        self.download_info.configure(text="Downloading WAV audio...")
+        thread: threading.Thread = threading.Thread(
+            target=self._run_wav_download, daemon=True
+        )
+        thread.start()
+
+    def _run_wav_download(self) -> None:
+        """
+        Helper method to run wav download in a separate thread
+        """
+        asyncio.run(self.download_wav())
+
+    async def download_wav(self) -> None:
+        """
+        Async method to download wav from YouTube video
+        """
+        link: str = self.link_field.get()
+        video_info: VideoInfo = VideoInfo()
+        wav_downloader: Downloader = Downloader(
+            video_info=video_info
+        )
+        success: bool = await wav_downloader.download_audio(link, audio_format="wav")
+
+        if success:
+            self.download_info.configure(text="WAV downloaded successfully!")
+        else:
+            self.download_info.configure(text="Failed to download WAV")
 
         self.download_mp3_button.configure(state="enabled")
 
