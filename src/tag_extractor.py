@@ -12,6 +12,28 @@ from .updater import get_ffmpeg_path, get_yt_dlp_path
 path_manager: PathManager = PathManager()
 paths = path_manager.load_settings() or {}
 
+def sanitize_filename(filename: str) -> str:
+    """
+    Remove or replace characters that are invalid in file names.
+    :param filename: Original filename
+    :return: Sanitized filename
+    """
+    # Characters forbidden in Windows filenames
+    invalid_chars = '<>:"/\\|?*'
+
+    for char in invalid_chars:
+        filename = filename.replace(char, "_")
+
+    # Remove leading/trailing spaces and dots
+    filename = filename.strip(". ")
+
+    # Limit filename length
+    if len(filename) > 200:
+        filename = filename[:200]
+
+    return filename
+
+
 def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> str:
     """
     Function to save tags to a csv file and copy them to a clipboard.
@@ -22,10 +44,16 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> 
     output_path: Path = Path(paths.get("tags", "."))
     output_path.mkdir(parents=True, exist_ok=True)
 
+    safe_title = sanitize_filename(title.replace(" ", "_"))
     tags_text: str = "".join(f"{tag},\n" for tag in tags)
 
-    with open(output_path / f"{title}_tags.csv", "w", newline="", encoding="utf-8") as f:
-        f.write(tags_text)
+    try:
+        with open(
+            output_path / f"{safe_title}_tags.csv", "w", newline="", encoding="utf-8"
+        ) as f:
+            f.write(tags_text)
+    except OSError as e:
+        return f"Failed to save tags: {str(e)}"
 
     if copy:
         try:
@@ -34,6 +62,7 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> 
         except Exception as e:
             return f"Tags saved to file only (no clipboard access) {e}"
     return "Tags saved to file"
+
 
 class TagExtractor:
     def __init__(self, video_info) -> None:

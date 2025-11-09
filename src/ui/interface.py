@@ -329,7 +329,7 @@ class AppUI(ctk.CTk):
         dialog.title("Select Video Quality")
         dialog.geometry("400x400")
         dialog.transient(self)
-        dialog.grab_set()
+        dialog.after(100, lambda: dialog.grab_set())
         dialog.update_idletasks()
 
         main_x = self.winfo_x()
