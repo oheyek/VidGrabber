@@ -24,8 +24,8 @@ class AppUI(ctk.CTk):
         super().__init__()
         ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.1)")
-        self.geometry("1000x280")
-        self.resizable(True, True)
+        self.geometry("1000x300")
+        self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
 
@@ -53,6 +53,14 @@ class AppUI(ctk.CTk):
             font=ctk.CTkFont(size=14),
         )
         self.download_info.pack(pady=(10, 5))
+
+        self.progress_bar = ctk.CTkProgressBar(
+            self.main_frame,
+            width=600,
+            mode="indeterminate"
+        )
+        self.progress_bar.pack(pady=5)
+        self.progress_bar.pack_forget()
 
         entry_row: ctk.CTkFrame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         entry_row.configure(width=640, height=35)
@@ -161,8 +169,14 @@ class AppUI(ctk.CTk):
         self._set_all_buttons_state("disabled")
         self.download_info.configure(text=loading_msg)
 
+        self.progress_bar.pack(pady=5)
+        self.progress_bar.start()
+
         async def run_operation():
             result = await coroutine_func(*args)
+
+            self.progress_bar.stop()
+            self.progress_bar.pack_forget()
 
             if isinstance(result, bool):
                 if result:
@@ -193,7 +207,7 @@ class AppUI(ctk.CTk):
         Run the async function in a separate thread to avoid event loop conflicts
         """
         self._set_all_buttons_state("disabled")
-        self.download_info.configure(text="Downloading video data...")
+        self.download_info.configure(text="📥 Downloading video data...")
         thread: threading.Thread = threading.Thread(
             target=self._run_async_task, daemon=True
         )
@@ -203,7 +217,13 @@ class AppUI(ctk.CTk):
         """
         Helper method to run async task in a separate thread
         """
+        self.progress_bar.pack(pady=5)
+        self.progress_bar.start()
+
         asyncio.run(self.get_link_info())
+
+        self.progress_bar.stop()
+        self.progress_bar.pack_forget()
 
     async def get_link_info(self) -> None:
         """
@@ -217,12 +237,13 @@ class AppUI(ctk.CTk):
         if isinstance(result, list):
             title = result[0]
             self.available_qualities = [q for q in result[4:] if q.startswith("mp4")]
+            self.download_info.configure(text=title)
+            self._set_all_buttons_state("enabled")
         else:
-            title = result
-            self.available_qualities = []
-
-        self.download_info.configure(text=title)
-        self._set_all_buttons_state("enabled")
+            self.download_info.configure(text=f"❌ {result}")
+            self.video_info_button.configure(
+                state="enabled"
+            )
 
     def handle_download_thumbnail(self) -> None:
         """
@@ -236,9 +257,9 @@ class AppUI(ctk.CTk):
 
         self._run_async_operation(
             self.download_thumbnail_button,
-            "Downloading thumbnail...",
-            "Thumbnail downloaded successfully!",
-            "Failed to download thumbnail",
+            "🖼️ Downloading thumbnail...",
+            "✅ Thumbnail downloaded successfully!",
+            "❌ Failed to download thumbnail",
             download
         )
 
@@ -254,9 +275,9 @@ class AppUI(ctk.CTk):
 
         self._run_async_operation(
             self.download_mp3_button,
-            "Downloading MP3 audio...",
-            "MP3 downloaded successfully!",
-            "Failed to download MP3",
+            "🎵 Downloading MP3 audio...",
+            "✅ MP3 downloaded successfully!",
+            "❌ Failed to download MP3",
             download
         )
 
@@ -272,9 +293,9 @@ class AppUI(ctk.CTk):
 
         self._run_async_operation(
             self.download_wav_button,
-            "Downloading WAV audio...",
-            "WAV downloaded successfully!",
-            "Failed to download WAV",
+            "🎵 Downloading WAV audio...",
+            "✅ WAV downloaded successfully!",
+            "❌ Failed to download WAV",
             download
         )
 
@@ -290,9 +311,9 @@ class AppUI(ctk.CTk):
 
         self._run_async_operation(
             self.download_tags_button,
-            "Extracting video tags...",
-            "Tags extracted to file and copied to clipboard!",
-            "Failed to extract tags",
+            "🏷️ Extracting video tags...",
+            "✅ Tags extracted to file and copied to clipboard!",
+            "❌ Failed to extract tags",
             extract
         )
 
@@ -301,7 +322,7 @@ class AppUI(ctk.CTk):
         Show quality selection dialog
         """
         if not self.available_qualities:
-            self.download_info.configure(text="No quality options available")
+            self.download_info.configure(text="❌ No quality options available")
             return
 
         dialog = ctk.CTkToplevel(self)
@@ -359,8 +380,8 @@ class AppUI(ctk.CTk):
 
         self._run_async_operation(
             self.download_mp4_button,
-            f"Downloading MP4 ({quality})...",
-            f"MP4 ({quality}) downloaded successfully!",
-            "Failed to download MP4",
+            f"🎬 Downloading MP4 ({quality})...",
+            f"✅ MP4 ({quality}) downloaded successfully!",
+            "❌ Failed to download MP4",
             download
         )
