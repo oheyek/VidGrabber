@@ -75,7 +75,7 @@ class Downloader:
                 line = await process.stdout.readline()
                 if not line:
                     break
-                output: str = line.decode().strip()
+                output: str = line.decode("utf-8", errors="replace").strip()
                 if output:
                     sys.stdout.write(f"\r{output}")
                     sys.stdout.flush()
@@ -84,7 +84,7 @@ class Downloader:
 
             if process.returncode != 0:
                 stderr = await process.stderr.read()
-                error_msg = stderr.decode().strip()
+                error_msg = stderr.decode("utf-8", errors="replace").strip()
                 return f"Download failed: {error_msg or 'Incorrect video quality'}"
 
             return "Download completed!"
@@ -140,7 +140,7 @@ class Downloader:
                 line = await process.stdout.readline()
                 if not line:
                     break
-                output = line.decode().strip()
+                output = line.decode("utf-8", errors="replace").strip()
                 if output:
                     sys.stdout.write(f"\r{output}")
                     sys.stdout.flush()
@@ -149,7 +149,7 @@ class Downloader:
 
             if process.returncode != 0:
                 stderr = await process.stderr.read()
-                error_msg = stderr.decode().strip()
+                error_msg = stderr.decode("utf-8", errors="replace").strip()
                 return f"Download failed: {error_msg}"
 
             return f"{audio_format_upper} download completed!"

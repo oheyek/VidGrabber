@@ -96,14 +96,14 @@ class VideoInfo:
             stdout, stderr = await process.communicate()
 
             if process.returncode != 0:
-                error_msg = stderr.decode().strip()
+                error_msg = stderr.decode("utf-8", errors="replace").strip()
                 if "Private video" in error_msg or "unavailable" in error_msg.lower():
                     return (
                         f"Download error (video may be unavailable or private): {link}"
                     )
                 return f"Error extracting info: {error_msg}"
 
-            info = json.loads(stdout.decode())
+            info = json.loads(stdout.decode("utf-8", errors="replace"))
 
             if not info:
                 return f"Could not extract information from: {link}"

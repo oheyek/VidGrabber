@@ -48,7 +48,7 @@ class ThumbnailDownloader:
             stdout, stderr = await process.communicate()
 
             if process.returncode != 0:
-                error_msg = stderr.decode().strip()
+                error_msg = stderr.decode("utf-8", errors="replace").strip()
                 return f"Download failed: {error_msg}"
 
             return "Thumbnail download completed!"
