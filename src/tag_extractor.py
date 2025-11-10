@@ -8,9 +8,7 @@ import pyperclip
 from .path_manager import PathManager
 from .logger import log_call
 from .updater import get_ffmpeg_path, get_yt_dlp_path
-
-path_manager: PathManager = PathManager()
-paths = path_manager.load_settings() or {}
+from .video_info import VideoInfo
 
 
 def sanitize_filename(filename: str) -> str:
@@ -43,14 +41,15 @@ def sanitize_filename(filename: str) -> str:
     return filename or "video"
 
 
-def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> str:
+def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool, path_manager: PathManager) -> str:
     """
     Function to save tags to a csv file and copy them to a clipboard.
     :param copy: Bool value whether the tags have to be copied to clipboard.
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
+    :param path_manager: The path manager instance for extracting path.
     """
-    output_path: Path = Path(paths.get("tags", "."))
+    output_path: Path = path_manager.get_download_path("tags")
     output_path.mkdir(parents=True, exist_ok=True)
 
     safe_title = sanitize_filename(title.replace(" ", "_"))
@@ -74,11 +73,12 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool) -> 
 
 
 class TagExtractor:
-    def __init__(self, video_info) -> None:
+    def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
         Constructor for a tag extractor class.
         """
         self.video_info = video_info
+        self.path_manager = path_manager if path_manager else PathManager()
         self.yt_dlp_path = get_yt_dlp_path()
         self.ffmpeg_path = get_ffmpeg_path()
 
@@ -116,7 +116,7 @@ class TagExtractor:
             tags: list[Any] | Any = info.get("tags") or []
             title: LiteralString = (info.get("title") or "").replace(" ", "_")
 
-            return save_tags_and_copy_to_clipboard(tags, title, copy)
+            return save_tags_and_copy_to_clipboard(tags, title, copy, self.path_manager)
 
         except json.JSONDecodeError:
             return f"Error parsing video information: {link}"

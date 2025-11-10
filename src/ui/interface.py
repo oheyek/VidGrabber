@@ -1,12 +1,16 @@
 import asyncio
 import threading
+from pathlib import Path
 
 import customtkinter as ctk
+import os
+from tkinter import filedialog
 
 from src.downloader import Downloader
 from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
+from src.path_manager import PathManager
 
 
 class AppUI(ctk.CTk):
@@ -24,10 +28,11 @@ class AppUI(ctk.CTk):
         super().__init__()
         ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.1)")
-        self.geometry("1000x300")
+        self.geometry("1000x350")
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
+        self.path_manager = PathManager()
 
         # ASCII Art Banner
         ascii_art: str = r"""
@@ -142,6 +147,151 @@ class AppUI(ctk.CTk):
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
+        self.settings_button = ctk.CTkButton(
+            self.main_frame,
+            text="⚙️Settings",
+            width=120,
+            height=30,
+            command=self.open_settings_window,
+        )
+        self.settings_button.pack(pady=(5, 10))
+
+    def open_settings_window(self) -> None:
+        """
+        Open settings dialog window
+        """
+        settings = ctk.CTkToplevel(self)
+        settings.title("Settings")
+        settings.geometry("450x500")
+        settings.resizable(False, False)
+        settings.transient(self)
+        if os.name == "nt":  # Windows
+            settings.after(100, lambda: settings.grab_set())
+        else:
+            settings.update()
+            settings.after(10, lambda: settings.grab_set())
+
+        self.update_idletasks()
+        settings.update_idletasks()
+
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+
+        dialog_width = settings.winfo_width()
+        dialog_height = settings.winfo_height()
+
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        settings.geometry(f"+{x}+{y}")
+
+        title_label = ctk.CTkLabel(
+            settings, text="⚙️ Settings", font=ctk.CTkFont(size=18, weight="bold")
+        )
+        title_label.pack(pady=(15, 10))
+
+        # Tabs
+        tabview = ctk.CTkTabview(settings, width=400, height=250, fg_color="transparent")
+        tabview.pack(padx=20, pady=10)
+
+        tabview.add("🎨 Appearance")
+        tabview.add("📁 Downloads")
+
+        # TAB 1: Appearance
+        theme_label = ctk.CTkLabel(
+            tabview.tab("🎨 Appearance"),
+            text="Color Theme",
+            font=ctk.CTkFont(size=14, weight="bold"),
+        )
+        theme_label.pack(pady=(10, 5), anchor="w", padx=20)
+
+        description_label = ctk.CTkLabel(
+            tabview.tab("🎨 Appearance"),
+            text="Choose your preferred color scheme:",
+            font=ctk.CTkFont(size=11),
+            text_color="gray",
+        )
+        description_label.pack(pady=(0, 10), anchor="w", padx=20)
+
+        current_theme = ctk.get_appearance_mode()
+        theme_var = ctk.StringVar(value=current_theme)
+
+        themes = [
+            ("🌙 Dark", "Dark", "Perfect for late-night coding"),
+            ("☀️ Light", "Light", "Easy on the eyes during daytime"),
+            ("💻 System", "System", "Follows your OS theme"),
+        ]
+
+        def change_theme(choice):
+            if settings.winfo_exists():
+                settings.grab_release()
+
+            ctk.set_appearance_mode(choice)
+
+            def delayed_update():
+                if not settings.winfo_exists():
+                    return
+
+                self.update_idletasks()
+                settings.update_idletasks()
+
+                self.download_info.configure(text=f"✅ Theme changed to {choice}")
+
+            self.after(200, delayed_update)
+
+        for label, value, desc in themes:
+            theme_frame = ctk.CTkFrame(
+                tabview.tab("🎨 Appearance"), fg_color="transparent"
+            )
+            theme_frame.pack(pady=4, fill="x", anchor="w", padx=20)
+
+            radio = ctk.CTkRadioButton(
+                theme_frame,
+                text=label,
+                variable=theme_var,
+                value=value,
+                command=lambda v=value: change_theme(v),
+                font=ctk.CTkFont(size=13, weight="bold"),
+            )
+            radio.pack(anchor="w")
+
+            desc_label = ctk.CTkLabel(
+                theme_frame,
+                text=f"   {desc}",
+                font=ctk.CTkFont(size=10),
+                text_color="gray",
+            )
+            desc_label.pack(anchor="w", padx=(25, 0))
+
+        # TAB 2: Downloads
+        path_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Downloads Location",
+            font=ctk.CTkFont(size=14, weight="bold"),
+        )
+        path_label.pack(pady=(10, 5), anchor="w", padx=20)
+
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Thumbnails (JPG)", "jpg"
+        )
+
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Audio (MP3)", "mp3"
+        )
+
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Audio (WAV)", "wav"
+        )
+
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Video (MP4)", "mp4"
+        )
+
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Tags (CSV)", "tags"
+        )
+
     def _set_all_buttons_state(self, state: str) -> None:
         """
         Enable or disable all operation buttons.
@@ -156,8 +306,7 @@ class AppUI(ctk.CTk):
 
     def _run_async_operation(
         self,
-        button: ctk.CTkButton,
-        loading_msg: str,
+            loading_msg: str,
         success_msg: str,
         error_msg: str,
         coroutine_func,
@@ -252,11 +401,10 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            thumbnail_downloader = ThumbnailDownloader(video_info=video_info)
+            thumbnail_downloader = ThumbnailDownloader(video_info=video_info, path_manager=self.path_manager)
             return await thumbnail_downloader.download_thumbnail(link)
 
         self._run_async_operation(
-            self.download_thumbnail_button,
             "🖼️ Downloading thumbnail...",
             "✅ Thumbnail downloaded successfully!",
             "❌ Failed to download thumbnail",
@@ -270,11 +418,10 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            mp3_downloader = Downloader(video_info=video_info)
+            mp3_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await mp3_downloader.download_audio(link, audio_format="mp3")
 
         self._run_async_operation(
-            self.download_mp3_button,
             "🎵 Downloading MP3 audio...",
             "✅ MP3 downloaded successfully!",
             "❌ Failed to download MP3",
@@ -288,11 +435,10 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            wav_downloader = Downloader(video_info=video_info)
+            wav_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await wav_downloader.download_audio(link, audio_format="wav")
 
         self._run_async_operation(
-            self.download_wav_button,
             "🎵 Downloading WAV audio...",
             "✅ WAV downloaded successfully!",
             "❌ Failed to download WAV",
@@ -306,11 +452,10 @@ class AppUI(ctk.CTk):
         async def extract():
             link = self.link_field.get()
             video_info = VideoInfo()
-            tag_extract = TagExtractor(video_info=video_info)
+            tag_extract = TagExtractor(video_info=video_info, path_manager=self.path_manager)
             return await tag_extract.extract_tags(link)
 
         self._run_async_operation(
-            self.download_tags_button,
             "🏷️ Extracting video tags...",
             "✅ Tags extracted to file and copied to clipboard!",
             "❌ Failed to extract tags",
@@ -319,7 +464,7 @@ class AppUI(ctk.CTk):
 
     def show_quality_selection(self) -> None:
         """
-        Show quality selection dialog
+        Show video_quality selection dialog
         """
         if not self.available_qualities:
             self.download_info.configure(text="❌ No quality options available")
@@ -365,9 +510,9 @@ class AppUI(ctk.CTk):
             radio.pack(pady=5)
 
         def on_download():
-            quality = selected_quality.get()
+            video_quality = selected_quality.get()
             dialog.destroy()
-            self.handle_download_mp4(quality)
+            self.handle_download_mp4(video_quality)
 
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         button_frame.pack(pady=20)
@@ -389,13 +534,86 @@ class AppUI(ctk.CTk):
         async def download():
             quality_height = int(quality.split()[1].rstrip("p"))
             video_info = VideoInfo()
-            mp4_downloader = Downloader(video_info=video_info)
+            mp4_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await mp4_downloader.download_video(self.current_link, quality=quality_height)
 
         self._run_async_operation(
-            self.download_mp4_button,
             f"🎬 Downloading MP4 ({quality})...",
             f"✅ MP4 ({quality}) downloaded successfully!",
             "❌ Failed to download MP4",
             download
         )
+
+    @staticmethod
+    def select_folder(entry: ctk.CTkEntry) -> None:
+        folder = filedialog.askdirectory(
+            title="Select Download Folder",
+            initialdir=entry.get() or os.path.expanduser("~/Downloads")
+        )
+        if folder:
+            entry.delete(0, "end")
+            entry.insert(0, folder)
+
+    def _create_path_selector(
+            self,
+            parent: ctk.CTkFrame,
+            label_text: str,
+            extension: str
+    ) -> ctk.CTkEntry:
+        """
+        Create a standardized path selector with label, entry and browse button.
+
+        :param parent: Parent frame to add the selector to
+        :param label_text: Label text to display above the selector
+        :param extension: File extension key (jpg, mp3, wav, mp4, tags)
+        :return: The entry widget for potential later access
+        """
+        label = ctk.CTkLabel(
+            parent,
+            text=label_text,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        row = ctk.CTkFrame(parent, fg_color="transparent")
+        row.pack(fill="x", padx=20, pady=2)
+
+        entry = ctk.CTkEntry(row, width=260, height=28, state="readonly")
+
+        if extension in self.path_manager.paths:
+            saved_path = str(self.path_manager.paths[extension])
+        else:
+            saved_path = str(Path.home() / "Downloads" / extension)
+
+        entry.configure(state="normal")
+        entry.insert(0, saved_path)
+        entry.configure(state="readonly")
+        entry.pack(side="left", padx=(0, 5))
+
+        def on_browse():
+            folder = filedialog.askdirectory(
+                title="Select Download Folder",
+                initialdir=entry.get() or os.path.expanduser("~/Downloads")
+            )
+            if folder:
+                entry.configure(state="normal")
+                entry.delete(0, "end")
+                entry.insert(0, folder)
+                entry.configure(state="readonly")
+                self.path_manager.paths[extension] = Path(folder)
+                self.path_manager.save_settings()
+                self.download_info.configure(
+                    text=f"✅ Path for {extension} saved!",
+                )
+
+        browse_btn = ctk.CTkButton(
+            row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=on_browse,
+        )
+        browse_btn.pack(side="left")
+
+        return entry
