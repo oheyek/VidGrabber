@@ -224,18 +224,21 @@ class AppUI(ctk.CTk):
         ]
 
         def change_theme(choice):
-            settings.grab_release()
+            if settings.winfo_exists():
+                settings.grab_release()
 
             ctk.set_appearance_mode(choice)
 
-            def update_ui():
-                self.update()
-                settings.update()
-                self.download_info.configure(text=f"✅ Theme changed to {choice}")
-                if settings.winfo_exists():
-                    settings.grab_set()
+            def delayed_update():
+                if not settings.winfo_exists():
+                    return
 
-            self.after(150, update_ui)
+                self.update_idletasks()
+                settings.update_idletasks()
+
+                self.download_info.configure(text=f"✅ Theme changed to {choice}")
+
+            self.after(200, delayed_update)
 
         for label, value, desc in themes:
             theme_frame = ctk.CTkFrame(
