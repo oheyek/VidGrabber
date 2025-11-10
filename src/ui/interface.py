@@ -382,7 +382,7 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            thumbnail_downloader = ThumbnailDownloader(video_info=video_info)
+            thumbnail_downloader = ThumbnailDownloader(video_info=video_info, path_manager=self.path_manager)
             return await thumbnail_downloader.download_thumbnail(link)
 
         self._run_async_operation(
@@ -399,7 +399,7 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            mp3_downloader = Downloader(video_info=video_info)
+            mp3_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await mp3_downloader.download_audio(link, audio_format="mp3")
 
         self._run_async_operation(
@@ -416,7 +416,7 @@ class AppUI(ctk.CTk):
         async def download():
             link = self.link_field.get()
             video_info = VideoInfo()
-            wav_downloader = Downloader(video_info=video_info)
+            wav_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await wav_downloader.download_audio(link, audio_format="wav")
 
         self._run_async_operation(
@@ -433,7 +433,7 @@ class AppUI(ctk.CTk):
         async def extract():
             link = self.link_field.get()
             video_info = VideoInfo()
-            tag_extract = TagExtractor(video_info=video_info)
+            tag_extract = TagExtractor(video_info=video_info, path_manager=self.path_manager)
             return await tag_extract.extract_tags(link)
 
         self._run_async_operation(
@@ -515,7 +515,7 @@ class AppUI(ctk.CTk):
         async def download():
             quality_height = int(quality.split()[1].rstrip("p"))
             video_info = VideoInfo()
-            mp4_downloader = Downloader(video_info=video_info)
+            mp4_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
             return await mp4_downloader.download_video(self.current_link, quality=quality_height)
 
         self._run_async_operation(

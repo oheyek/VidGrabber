@@ -4,16 +4,15 @@ from pathlib import Path
 from .path_manager import PathManager
 from .logger import log_call
 from .updater import get_yt_dlp_path, get_ffmpeg_path
-
-path_manager: PathManager = PathManager()
-paths = path_manager.load_settings() or {}
+from .video_info import VideoInfo
 
 class ThumbnailDownloader:
-    def __init__(self, video_info) -> None:
+    def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
         Constructor for a thumbnail downloader class.
         """
         self.video_info = video_info
+        self.path_manager = path_manager if path_manager else PathManager()
         self.yt_dlp_path = get_yt_dlp_path()
         self.ffmpeg_path = get_ffmpeg_path()
 
@@ -28,7 +27,7 @@ class ThumbnailDownloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
-        output_path: Path = Path(paths.get('jpg', '.'))
+        output_path: Path = self.path_manager.get_download_path('jpg')
         output_template: str = str(output_path / "%(title)s.%(ext)s")
 
         try:

@@ -5,16 +5,16 @@ from pathlib import Path
 from .path_manager import PathManager
 from .logger import log_call
 from .updater import get_ffmpeg_path, get_yt_dlp_path
-
-path_manager: PathManager = PathManager()
+from .video_info import VideoInfo
 
 
 class Downloader:
-    def __init__(self, video_info) -> None:
+    def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
         Constructor of a downloader class.
         """
         self.video_info = video_info
+        self.path_manager = path_manager if path_manager else PathManager()
         self.yt_dlp_path = get_yt_dlp_path()
         self.ffmpeg_path = get_ffmpeg_path()
 
@@ -47,7 +47,7 @@ class Downloader:
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
-        download_path: Path = path_manager.get_download_path("mp4")
+        download_path: Path = self.path_manager.get_download_path("mp4")
         output_template: str = str(
             Path(download_path) / f"%(title)s_{quality}p.%(ext)s"
         )
@@ -111,7 +111,7 @@ class Downloader:
             return "Invalid link provided."
 
         audio_format_lower: str = audio_format.lower()
-        download_path: Path = path_manager.get_download_path(audio_format_lower)
+        download_path: Path = self.path_manager.get_download_path(audio_format_lower)
         output_template: str = str(Path(download_path) / "%(title)s.%(ext)s")
 
         try:
