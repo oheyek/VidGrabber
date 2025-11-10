@@ -157,12 +157,12 @@ class AppUI(ctk.CTk):
         """
         settings = ctk.CTkToplevel(self)
         settings.title("Settings")
-        settings.geometry("500x400")
+        settings.geometry("450x320")
         settings.resizable(False, False)
         settings.transient(self)
         settings.grab_set()
-
         settings.update_idletasks()
+
         main_x = self.winfo_x()
         main_y = self.winfo_y()
         main_width = self.winfo_width()
@@ -176,25 +176,63 @@ class AppUI(ctk.CTk):
         settings.geometry(f"+{x}+{y}")
 
         title_label = ctk.CTkLabel(
-            settings, text="⚙️Settings", font=ctk.CTkFont(size=20, weight="bold")
+            settings, text="⚙️ Settings", font=ctk.CTkFont(size=18, weight="bold")
         )
-        title_label.pack(pady=20)
+        title_label.pack(pady=(15, 10))
 
         settings_frame = ctk.CTkFrame(settings, fg_color="transparent")
-        settings_frame.pack(padx=20, pady=10, fill="both", expand=True)
+        settings_frame.pack(padx=30, pady=10, fill="both", expand=True)
 
-        button_frame = ctk.CTkFrame(settings, fg_color="transparent")
-        button_frame.pack(pady=20)
-
-        cancel_btn = ctk.CTkButton(
-            button_frame, text="Cancel", command=settings.destroy, width=100
+        theme_label = ctk.CTkLabel(
+            settings_frame,
+            text="🎨 Appearance Theme",
+            font=ctk.CTkFont(size=14, weight="bold"),
         )
-        cancel_btn.pack(side="left", padx=5)
+        theme_label.pack(pady=(0, 8), anchor="w")
 
-        save_btn = ctk.CTkButton(
-            button_frame, text="Save", command=settings.destroy, width=100
+        description_label = ctk.CTkLabel(
+            settings_frame,
+            text="Choose your preferred color scheme:",
+            font=ctk.CTkFont(size=11),
+            text_color="gray",
         )
-        save_btn.pack(side="left", padx=5)
+        description_label.pack(pady=(0, 12), anchor="w")
+
+        current_theme = ctk.get_appearance_mode()
+        theme_var = ctk.StringVar(value=current_theme)
+
+        themes = [
+            ("🌙 Dark", "Dark", "Perfect for late-night coding"),
+            ("☀️ Light", "Light", "Easy on the eyes during daytime"),
+            ("💻 System", "System", "Follows your OS theme"),
+        ]
+
+        def change_theme(choice):
+            ctk.set_appearance_mode(choice)
+            self.download_info.configure(text=f"✅ Theme changed to {choice}")
+
+        for label, value, desc in themes:
+            theme_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
+            theme_frame.pack(pady=5, fill="x", anchor="w")
+
+            radio = ctk.CTkRadioButton(
+                theme_frame,
+                text=label,
+                variable=theme_var,
+                value=value,
+                command=lambda v=value: change_theme(v),
+                font=ctk.CTkFont(size=13, weight="bold"),
+            )
+            radio.pack(anchor="w")
+
+            desc_label = ctk.CTkLabel(
+                theme_frame,
+                text=f"   {desc}",
+                font=ctk.CTkFont(size=10),
+                text_color="gray",
+            )
+            desc_label.pack(anchor="w", padx=(25, 0))
+
 
     def _set_all_buttons_state(self, state: str) -> None:
         """
