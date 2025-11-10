@@ -149,7 +149,7 @@ class AppUI(ctk.CTk):
             height=30,
             command=self.open_settings_window,
         )
-        self.settings_button.pack(pady=(15, 10))
+        self.settings_button.pack(pady=(5, 10))
 
     def open_settings_window(self) -> None:
         """
