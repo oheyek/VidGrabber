@@ -165,7 +165,9 @@ class AppUI(ctk.CTk):
         settings.geometry("450x500")
         settings.resizable(False, False)
         settings.transient(self)
-        settings.grab_set()
+        settings.update()
+        settings.after(10, lambda: settings.grab_set())
+        self.update_idletasks()
         settings.update_idletasks()
 
         main_x = self.winfo_x()
@@ -219,8 +221,12 @@ class AppUI(ctk.CTk):
 
         def change_theme(choice):
             ctk.set_appearance_mode(choice)
-            self.download_info.configure(text=f"✅ Theme changed to {choice}")
-
+            self.after(
+                100,
+                lambda: self.download_info.configure(
+                    text=f"✅ Theme changed to {choice}"
+                ),
+            )
         for label, value, desc in themes:
             theme_frame = ctk.CTkFrame(
                 tabview.tab("🎨 Appearance"), fg_color="transparent"
