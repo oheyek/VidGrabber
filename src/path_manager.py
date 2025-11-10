@@ -11,7 +11,19 @@ class PathManager:
         self.settings_dir = Path.home() / "Documents" / "VidGrabber"
         self.settings_file = self.settings_dir / "settings.json"
         self._ensure_settings_file()
-        self.paths = self.load_settings()
+        self._paths = None
+
+    @property
+    def paths(self) -> Dict[str, Path]:
+        """Lazy load paths only when needed."""
+        if self._paths is None:
+            self._paths = self.load_settings()
+        return self._paths
+
+    @paths.setter
+    def paths(self, value: Dict[str, Path]) -> None:
+        """Allow setting paths."""
+        self._paths = value
 
     def _ensure_settings_file(self) -> None:
         """Ensure settings directory and file exist."""
@@ -27,57 +39,53 @@ class PathManager:
             self._write_default_settings()
 
     def _write_default_settings(self) -> None:
-        """Write default download paths to settings file."""
-        defaults: dict[str, str] = {
-            ext: str(Path.home() / "Downloads" / ext)
-            for ext in self.DEFAULT_EXTENSIONS
-        }
-
+        """Write empty settings file - no default paths until first download."""
         with open(self.settings_file, "w", encoding="utf-8") as f:
-            json.dump(defaults, f, ensure_ascii=False, indent=4)
+            json.dump({}, f, ensure_ascii=False, indent=4)
 
     def load_settings(self) -> Dict[str, Path]:
         """
-        Load settings from file and ensure directories exist.
-        :return: Dictionary mapping extensions to Path objects.
+        Load settings from file WITHOUT creating directories.
+        :return: Dictionary mapping extensions to Path objects (empty if no settings).
         """
         try:
             with open(self.settings_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except (json.JSONDecodeError, OSError, FileNotFoundError):
             self._write_default_settings()
-            return self.load_settings()
+            return {}
 
-        if not data:
-            self._write_default_settings()
-            return self.load_settings()
-
-        # Convert to Path objects and create directories
+        # Convert to Path objects WITHOUT creating directories
         paths: dict[Any, Any] = {}
         for key, value in data.items():
-            path = Path(value)
-            path.mkdir(parents=True, exist_ok=True)
-            paths[key] = path
+            paths[key] = Path(value)
 
         return paths
 
     def get_download_path(self, ext: str) -> Path:
         """
         Get download path for extension, creating it if necessary.
-        Thread-safe implementation for concurrent downloads.
+        Only creates folder for the requested extension.
         :param ext: File extension (without dot)
         :return: Path object for the download directory
+        :raises RuntimeError: If directory cannot be created due to permissions
         """
+        # Lazy loading - paths będą załadowane tylko przy pierwszym użyciu
         if ext not in self.paths:
-            # Create fallback path
+            # Create default path ONLY for this specific extension
             fallback = Path.home() / "Downloads" / ext
             self.paths[ext] = fallback
+            # Save immediately so it persists
+            self.save_settings()
 
-        # Ensure directory exists (thread-safe with exist_ok=True)
+        # Create directory when downloading
         try:
             self.paths[ext].mkdir(parents=True, exist_ok=True)
-        except FileExistsError:
-            pass
+        except (PermissionError, OSError) as e:
+            raise RuntimeError(
+                f"Cannot create directory '{self.paths[ext]}': {str(e)}. "
+                f"Please check permissions or choose a different location."
+            )
 
         return self.paths[ext]
 
@@ -85,7 +93,6 @@ class PathManager:
     def ensure_parent(file_path: Path) -> None:
         """
         Ensure parent directory exists for a file path.
-
         :param file_path: Path to a file
         """
         file_path.parent.mkdir(parents=True, exist_ok=True)

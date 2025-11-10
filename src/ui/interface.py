@@ -560,9 +560,16 @@ class AppUI(ctk.CTk):
         row = ctk.CTkFrame(parent, fg_color="transparent")
         row.pack(fill="x", padx=20, pady=2)
 
-        entry = ctk.CTkEntry(row, width=260, height=28)
-        saved_path = str(self.path_manager.get_download_path(extension))
+        entry = ctk.CTkEntry(row, width=260, height=28, state="readonly")
+
+        if extension in self.path_manager.paths:
+            saved_path = str(self.path_manager.paths[extension])
+        else:
+            saved_path = str(Path.home() / "Downloads" / extension)
+
+        entry.configure(state="normal")
         entry.insert(0, saved_path)
+        entry.configure(state="readonly")
         entry.pack(side="left", padx=(0, 5))
 
         def on_browse():
@@ -571,12 +578,15 @@ class AppUI(ctk.CTk):
                 initialdir=entry.get() or os.path.expanduser("~/Downloads")
             )
             if folder:
+                entry.configure(state="normal")
                 entry.delete(0, "end")
                 entry.insert(0, folder)
-                # Update and save
+                entry.configure(state="readonly")
                 self.path_manager.paths[extension] = Path(folder)
                 self.path_manager.save_settings()
-                self.download_info.configure(text=f"✅ Path for {extension} saved!")
+                self.download_info.configure(
+                    text=f"✅ Path for {extension} saved!",
+                )
 
         browse_btn = ctk.CTkButton(
             row,
