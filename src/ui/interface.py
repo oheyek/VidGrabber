@@ -2,6 +2,8 @@ import asyncio
 import threading
 
 import customtkinter as ctk
+import os
+from tkinter import filedialog
 
 from src.downloader import Downloader
 from src.tag_extractor import TagExtractor
@@ -157,7 +159,7 @@ class AppUI(ctk.CTk):
         """
         settings = ctk.CTkToplevel(self)
         settings.title("Settings")
-        settings.geometry("450x320")
+        settings.geometry("450x500")
         settings.resizable(False, False)
         settings.transient(self)
         settings.grab_set()
@@ -180,23 +182,28 @@ class AppUI(ctk.CTk):
         )
         title_label.pack(pady=(15, 10))
 
-        settings_frame = ctk.CTkFrame(settings, fg_color="transparent")
-        settings_frame.pack(padx=30, pady=10, fill="both", expand=True)
+        # Tabs
+        tabview = ctk.CTkTabview(settings, width=400, height=250, fg_color="transparent")
+        tabview.pack(padx=20, pady=10)
 
+        tabview.add("🎨 Appearance")
+        tabview.add("📁 Downloads")
+
+        # TAB 1: Appearance
         theme_label = ctk.CTkLabel(
-            settings_frame,
-            text="🎨 Appearance Theme",
+            tabview.tab("🎨 Appearance"),
+            text="Color Theme",
             font=ctk.CTkFont(size=14, weight="bold"),
         )
-        theme_label.pack(pady=(0, 8), anchor="w")
+        theme_label.pack(pady=(10, 5), anchor="w", padx=20)
 
         description_label = ctk.CTkLabel(
-            settings_frame,
+            tabview.tab("🎨 Appearance"),
             text="Choose your preferred color scheme:",
             font=ctk.CTkFont(size=11),
             text_color="gray",
         )
-        description_label.pack(pady=(0, 12), anchor="w")
+        description_label.pack(pady=(0, 10), anchor="w", padx=20)
 
         current_theme = ctk.get_appearance_mode()
         theme_var = ctk.StringVar(value=current_theme)
@@ -212,8 +219,10 @@ class AppUI(ctk.CTk):
             self.download_info.configure(text=f"✅ Theme changed to {choice}")
 
         for label, value, desc in themes:
-            theme_frame = ctk.CTkFrame(settings_frame, fg_color="transparent")
-            theme_frame.pack(pady=5, fill="x", anchor="w")
+            theme_frame = ctk.CTkFrame(
+                tabview.tab("🎨 Appearance"), fg_color="transparent"
+            )
+            theme_frame.pack(pady=4, fill="x", anchor="w", padx=20)
 
             radio = ctk.CTkRadioButton(
                 theme_frame,
@@ -233,6 +242,133 @@ class AppUI(ctk.CTk):
             )
             desc_label.pack(anchor="w", padx=(25, 0))
 
+        # TAB 2: Downloads
+        path_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Downloads Location",
+            font=ctk.CTkFont(size=14, weight="bold"),
+        )
+        path_label.pack(pady=(10, 5), anchor="w", padx=20)
+
+        jpg_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Thumbnails (JPG)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        jpg_label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        jpg_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
+        jpg_row.pack(fill="x", padx=20, pady=2)
+
+        jpg_entry = ctk.CTkEntry(jpg_row, width=260, height=28)
+        jpg_entry.insert(0, os.path.expanduser("~/Downloads"))
+        jpg_entry.pack(side="left", padx=(0, 5))
+
+        jpg_browse_btn = ctk.CTkButton(
+            jpg_row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(jpg_entry),
+        )
+        jpg_browse_btn.pack(side="left")
+
+        mp3_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Audio (MP3)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        mp3_label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        mp3_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
+        mp3_row.pack(fill="x", padx=20, pady=2)
+
+        mp3_entry = ctk.CTkEntry(mp3_row, width=260, height=28)
+        mp3_entry.insert(0, os.path.expanduser("~/Downloads"))
+        mp3_entry.pack(side="left", padx=(0, 5))
+
+        mp3_browse_btn = ctk.CTkButton(
+            mp3_row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(mp3_entry),
+        )
+        mp3_browse_btn.pack(side="left")
+
+        wav_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Audio (WAV)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        wav_label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        wav_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
+        wav_row.pack(fill="x", padx=20, pady=2)
+
+        wav_entry = ctk.CTkEntry(wav_row, width=260, height=28)
+        wav_entry.insert(0, os.path.expanduser("~/Downloads"))
+        wav_entry.pack(side="left", padx=(0, 5))
+
+        wav_browse_btn = ctk.CTkButton(
+            wav_row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(wav_entry),
+        )
+        wav_browse_btn.pack(side="left")
+
+        mp4_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Video (MP4)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        mp4_label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        mp4_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
+        mp4_row.pack(fill="x", padx=20, pady=2)
+
+        mp4_entry = ctk.CTkEntry(mp4_row, width=260, height=28)
+        mp4_entry.insert(0, os.path.expanduser("~/Downloads"))
+        mp4_entry.pack(side="left", padx=(0, 5))
+
+        mp4_browse_btn = ctk.CTkButton(
+            mp4_row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(mp4_entry),
+        )
+        mp4_browse_btn.pack(side="left")
+
+        csv_label = ctk.CTkLabel(
+            tabview.tab("📁 Downloads"),
+            text="Tags (CSV)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        csv_label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        csv_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
+        csv_row.pack(fill="x", padx=20, pady=2)
+
+        csv_entry = ctk.CTkEntry(csv_row, width=260, height=28)
+        csv_entry.insert(0, os.path.expanduser("~/Downloads"))
+        csv_entry.pack(side="left", padx=(0, 5))
+
+        csv_browse_btn = ctk.CTkButton(
+            csv_row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(jpg_entry),
+        )
+        csv_browse_btn.pack(side="left")
 
     def _set_all_buttons_state(self, state: str) -> None:
         """
@@ -491,3 +627,12 @@ class AppUI(ctk.CTk):
             "❌ Failed to download MP4",
             download
         )
+
+    def select_folder(self, entry: ctk.CTkEntry) -> None:
+        folder = filedialog.askdirectory(
+            title="Select Download Folder",
+            initialdir=entry.get() or os.path.expanduser("~/Downloads")
+        )
+        if folder:
+            entry.delete(0, "end")
+            entry.insert(0, folder)
