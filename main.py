@@ -21,10 +21,10 @@ async def main() -> None:
     """
     Main function of the program.
     """
-    # print("=" * 50)
-    # await initialize_binaries()
-    # print("=" * 50)
-    # print()
+    print("=" * 50)
+    await initialize_binaries()
+    print("=" * 50)
+    print()
     interface: AppUI = AppUI()
     interface.mainloop()
 
