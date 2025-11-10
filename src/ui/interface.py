@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from pathlib import Path
 
 import customtkinter as ctk
 import os
@@ -564,12 +565,25 @@ class AppUI(ctk.CTk):
         entry.insert(0, saved_path)
         entry.pack(side="left", padx=(0, 5))
 
+        def on_browse():
+            folder = filedialog.askdirectory(
+                title="Select Download Folder",
+                initialdir=entry.get() or os.path.expanduser("~/Downloads")
+            )
+            if folder:
+                entry.delete(0, "end")
+                entry.insert(0, folder)
+                # Update and save
+                self.path_manager.paths[extension] = Path(folder)
+                self.path_manager.save_settings()
+                self.download_info.configure(text=f"✅ Path for {extension} saved!")
+
         browse_btn = ctk.CTkButton(
             row,
             text="📂 Browse",
             width=70,
             height=28,
-            command=lambda: self.select_folder(entry),
+            command=on_browse,
         )
         browse_btn.pack(side="left")
 

@@ -89,3 +89,11 @@ class PathManager:
         :param file_path: Path to a file
         """
         file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def save_settings(self) -> None:
+        """
+        Save current paths to settings file.
+        """
+        data = {key: str(path) for key, path in self.paths.items()}
+        with open(self.settings_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
