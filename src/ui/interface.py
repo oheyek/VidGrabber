@@ -250,125 +250,25 @@ class AppUI(ctk.CTk):
         )
         path_label.pack(pady=(10, 5), anchor="w", padx=20)
 
-        jpg_label = ctk.CTkLabel(
-            tabview.tab("📁 Downloads"),
-            text="Thumbnails (JPG)",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="gray70",
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Thumbnails (JPG)"
         )
-        jpg_label.pack(pady=(5, 2), anchor="w", padx=20)
 
-        jpg_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
-        jpg_row.pack(fill="x", padx=20, pady=2)
-
-        jpg_entry = ctk.CTkEntry(jpg_row, width=260, height=28)
-        jpg_entry.insert(0, os.path.expanduser("~/Downloads"))
-        jpg_entry.pack(side="left", padx=(0, 5))
-
-        jpg_browse_btn = ctk.CTkButton(
-            jpg_row,
-            text="📂 Browse",
-            width=70,
-            height=28,
-            command=lambda: self.select_folder(jpg_entry),
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Audio (MP3)"
         )
-        jpg_browse_btn.pack(side="left")
 
-        mp3_label = ctk.CTkLabel(
-            tabview.tab("📁 Downloads"),
-            text="Audio (MP3)",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="gray70",
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Audio (WAV)"
         )
-        mp3_label.pack(pady=(5, 2), anchor="w", padx=20)
 
-        mp3_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
-        mp3_row.pack(fill="x", padx=20, pady=2)
-
-        mp3_entry = ctk.CTkEntry(mp3_row, width=260, height=28)
-        mp3_entry.insert(0, os.path.expanduser("~/Downloads"))
-        mp3_entry.pack(side="left", padx=(0, 5))
-
-        mp3_browse_btn = ctk.CTkButton(
-            mp3_row,
-            text="📂 Browse",
-            width=70,
-            height=28,
-            command=lambda: self.select_folder(mp3_entry),
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Video (MP4)"
         )
-        mp3_browse_btn.pack(side="left")
 
-        wav_label = ctk.CTkLabel(
-            tabview.tab("📁 Downloads"),
-            text="Audio (WAV)",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="gray70",
+        self._create_path_selector(
+            tabview.tab("📁 Downloads"), "Tags (CSV)"
         )
-        wav_label.pack(pady=(5, 2), anchor="w", padx=20)
-
-        wav_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
-        wav_row.pack(fill="x", padx=20, pady=2)
-
-        wav_entry = ctk.CTkEntry(wav_row, width=260, height=28)
-        wav_entry.insert(0, os.path.expanduser("~/Downloads"))
-        wav_entry.pack(side="left", padx=(0, 5))
-
-        wav_browse_btn = ctk.CTkButton(
-            wav_row,
-            text="📂 Browse",
-            width=70,
-            height=28,
-            command=lambda: self.select_folder(wav_entry),
-        )
-        wav_browse_btn.pack(side="left")
-
-        mp4_label = ctk.CTkLabel(
-            tabview.tab("📁 Downloads"),
-            text="Video (MP4)",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="gray70",
-        )
-        mp4_label.pack(pady=(5, 2), anchor="w", padx=20)
-
-        mp4_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
-        mp4_row.pack(fill="x", padx=20, pady=2)
-
-        mp4_entry = ctk.CTkEntry(mp4_row, width=260, height=28)
-        mp4_entry.insert(0, os.path.expanduser("~/Downloads"))
-        mp4_entry.pack(side="left", padx=(0, 5))
-
-        mp4_browse_btn = ctk.CTkButton(
-            mp4_row,
-            text="📂 Browse",
-            width=70,
-            height=28,
-            command=lambda: self.select_folder(mp4_entry),
-        )
-        mp4_browse_btn.pack(side="left")
-
-        csv_label = ctk.CTkLabel(
-            tabview.tab("📁 Downloads"),
-            text="Tags (CSV)",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="gray70",
-        )
-        csv_label.pack(pady=(5, 2), anchor="w", padx=20)
-
-        csv_row = ctk.CTkFrame(tabview.tab("📁 Downloads"), fg_color="transparent")
-        csv_row.pack(fill="x", padx=20, pady=2)
-
-        csv_entry = ctk.CTkEntry(csv_row, width=260, height=28)
-        csv_entry.insert(0, os.path.expanduser("~/Downloads"))
-        csv_entry.pack(side="left", padx=(0, 5))
-
-        csv_browse_btn = ctk.CTkButton(
-            csv_row,
-            text="📂 Browse",
-            width=70,
-            height=28,
-            command=lambda: self.select_folder(jpg_entry),
-        )
-        csv_browse_btn.pack(side="left")
 
     def _set_all_buttons_state(self, state: str) -> None:
         """
@@ -384,8 +284,7 @@ class AppUI(ctk.CTk):
 
     def _run_async_operation(
         self,
-        button: ctk.CTkButton,
-        loading_msg: str,
+            loading_msg: str,
         success_msg: str,
         error_msg: str,
         coroutine_func,
@@ -484,7 +383,6 @@ class AppUI(ctk.CTk):
             return await thumbnail_downloader.download_thumbnail(link)
 
         self._run_async_operation(
-            self.download_thumbnail_button,
             "🖼️ Downloading thumbnail...",
             "✅ Thumbnail downloaded successfully!",
             "❌ Failed to download thumbnail",
@@ -502,7 +400,6 @@ class AppUI(ctk.CTk):
             return await mp3_downloader.download_audio(link, audio_format="mp3")
 
         self._run_async_operation(
-            self.download_mp3_button,
             "🎵 Downloading MP3 audio...",
             "✅ MP3 downloaded successfully!",
             "❌ Failed to download MP3",
@@ -520,7 +417,6 @@ class AppUI(ctk.CTk):
             return await wav_downloader.download_audio(link, audio_format="wav")
 
         self._run_async_operation(
-            self.download_wav_button,
             "🎵 Downloading WAV audio...",
             "✅ WAV downloaded successfully!",
             "❌ Failed to download WAV",
@@ -538,7 +434,6 @@ class AppUI(ctk.CTk):
             return await tag_extract.extract_tags(link)
 
         self._run_async_operation(
-            self.download_tags_button,
             "🏷️ Extracting video tags...",
             "✅ Tags extracted to file and copied to clipboard!",
             "❌ Failed to extract tags",
@@ -547,7 +442,7 @@ class AppUI(ctk.CTk):
 
     def show_quality_selection(self) -> None:
         """
-        Show quality selection dialog
+        Show video_quality selection dialog
         """
         if not self.available_qualities:
             self.download_info.configure(text="❌ No quality options available")
@@ -593,9 +488,9 @@ class AppUI(ctk.CTk):
             radio.pack(pady=5)
 
         def on_download():
-            quality = selected_quality.get()
+            video_quality = selected_quality.get()
             dialog.destroy()
-            self.handle_download_mp4(quality)
+            self.handle_download_mp4(video_quality)
 
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         button_frame.pack(pady=20)
@@ -621,14 +516,14 @@ class AppUI(ctk.CTk):
             return await mp4_downloader.download_video(self.current_link, quality=quality_height)
 
         self._run_async_operation(
-            self.download_mp4_button,
             f"🎬 Downloading MP4 ({quality})...",
             f"✅ MP4 ({quality}) downloaded successfully!",
             "❌ Failed to download MP4",
             download
         )
 
-    def select_folder(self, entry: ctk.CTkEntry) -> None:
+    @staticmethod
+    def select_folder(entry: ctk.CTkEntry) -> None:
         folder = filedialog.askdirectory(
             title="Select Download Folder",
             initialdir=entry.get() or os.path.expanduser("~/Downloads")
@@ -636,3 +531,43 @@ class AppUI(ctk.CTk):
         if folder:
             entry.delete(0, "end")
             entry.insert(0, folder)
+
+    def _create_path_selector(
+            self,
+            parent: ctk.CTkFrame,
+            label_text: str,
+            default_path: str = "~/Downloads"
+    ) -> ctk.CTkEntry:
+        """
+        Create a standardized path selector with label, entry and browse button.
+
+        :param parent: Parent frame to add the selector to
+        :param label_text: Label text to display above the selector
+        :param default_path: Default path to show in the entry
+        :return: The entry widget for potential later access
+        """
+        label = ctk.CTkLabel(
+            parent,
+            text=label_text,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="gray70",
+        )
+        label.pack(pady=(5, 2), anchor="w", padx=20)
+
+        row = ctk.CTkFrame(parent, fg_color="transparent")
+        row.pack(fill="x", padx=20, pady=2)
+
+        entry = ctk.CTkEntry(row, width=260, height=28)
+        entry.insert(0, os.path.expanduser(default_path))
+        entry.pack(side="left", padx=(0, 5))
+
+        browse_btn = ctk.CTkButton(
+            row,
+            text="📂 Browse",
+            width=70,
+            height=28,
+            command=lambda: self.select_folder(entry),
+        )
+        browse_btn.pack(side="left")
+
+        return entry
