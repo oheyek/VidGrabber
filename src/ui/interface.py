@@ -9,6 +9,7 @@ from src.downloader import Downloader
 from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
+from src.path_manager import PathManager
 
 
 class AppUI(ctk.CTk):
@@ -30,6 +31,7 @@ class AppUI(ctk.CTk):
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
+        self.path_manager = PathManager()
 
         # ASCII Art Banner
         ascii_art: str = r"""
@@ -251,23 +253,23 @@ class AppUI(ctk.CTk):
         path_label.pack(pady=(10, 5), anchor="w", padx=20)
 
         self._create_path_selector(
-            tabview.tab("📁 Downloads"), "Thumbnails (JPG)"
+            tabview.tab("📁 Downloads"), "Thumbnails (JPG)", "jpg"
         )
 
         self._create_path_selector(
-            tabview.tab("📁 Downloads"), "Audio (MP3)"
+            tabview.tab("📁 Downloads"), "Audio (MP3)", "mp3"
         )
 
         self._create_path_selector(
-            tabview.tab("📁 Downloads"), "Audio (WAV)"
+            tabview.tab("📁 Downloads"), "Audio (WAV)", "wav"
         )
 
         self._create_path_selector(
-            tabview.tab("📁 Downloads"), "Video (MP4)"
+            tabview.tab("📁 Downloads"), "Video (MP4)", "mp4"
         )
 
         self._create_path_selector(
-            tabview.tab("📁 Downloads"), "Tags (CSV)"
+            tabview.tab("📁 Downloads"), "Tags (CSV)", "tags"
         )
 
     def _set_all_buttons_state(self, state: str) -> None:
@@ -536,14 +538,14 @@ class AppUI(ctk.CTk):
             self,
             parent: ctk.CTkFrame,
             label_text: str,
-            default_path: str = "~/Downloads"
+            extension: str
     ) -> ctk.CTkEntry:
         """
         Create a standardized path selector with label, entry and browse button.
 
         :param parent: Parent frame to add the selector to
         :param label_text: Label text to display above the selector
-        :param default_path: Default path to show in the entry
+        :param extension: File extension key (jpg, mp3, wav, mp4, tags)
         :return: The entry widget for potential later access
         """
         label = ctk.CTkLabel(
@@ -558,7 +560,8 @@ class AppUI(ctk.CTk):
         row.pack(fill="x", padx=20, pady=2)
 
         entry = ctk.CTkEntry(row, width=260, height=28)
-        entry.insert(0, os.path.expanduser(default_path))
+        saved_path = str(self.path_manager.get_download_path(extension))
+        entry.insert(0, saved_path)
         entry.pack(side="left", padx=(0, 5))
 
         browse_btn = ctk.CTkButton(
