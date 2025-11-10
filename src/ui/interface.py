@@ -24,7 +24,7 @@ class AppUI(ctk.CTk):
         super().__init__()
         ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.1)")
-        self.geometry("1000x300")
+        self.geometry("1000x350")
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
@@ -141,6 +141,60 @@ class AppUI(ctk.CTk):
         )
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
+
+        self.settings_button = ctk.CTkButton(
+            self.main_frame,
+            text="⚙️Settings",
+            width=120,
+            height=30,
+            command=self.open_settings_window,
+        )
+        self.settings_button.pack(pady=(15, 10))
+
+    def open_settings_window(self) -> None:
+        """
+        Open settings dialog window
+        """
+        settings = ctk.CTkToplevel(self)
+        settings.title("Settings")
+        settings.geometry("500x400")
+        settings.resizable(False, False)
+        settings.transient(self)
+        settings.grab_set()
+
+        settings.update_idletasks()
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+
+        dialog_width = settings.winfo_width()
+        dialog_height = settings.winfo_height()
+
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        settings.geometry(f"+{x}+{y}")
+
+        title_label = ctk.CTkLabel(
+            settings, text="⚙️Settings", font=ctk.CTkFont(size=20, weight="bold")
+        )
+        title_label.pack(pady=20)
+
+        settings_frame = ctk.CTkFrame(settings, fg_color="transparent")
+        settings_frame.pack(padx=20, pady=10, fill="both", expand=True)
+
+        button_frame = ctk.CTkFrame(settings, fg_color="transparent")
+        button_frame.pack(pady=20)
+
+        cancel_btn = ctk.CTkButton(
+            button_frame, text="Cancel", command=settings.destroy, width=100
+        )
+        cancel_btn.pack(side="left", padx=5)
+
+        save_btn = ctk.CTkButton(
+            button_frame, text="Save", command=settings.destroy, width=100
+        )
+        save_btn.pack(side="left", padx=5)
 
     def _set_all_buttons_state(self, state: str) -> None:
         """
