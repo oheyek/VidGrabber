@@ -27,6 +27,8 @@ class VideoInfo:
         :param link: The link provided by user.
         :return: Whether the link is a valid YouTube link or not.
         """
+        if not isinstance(link, str):
+            return False
         try:
             link: str = link.strip()
             if not link.startswith(("http://", "https://")):
