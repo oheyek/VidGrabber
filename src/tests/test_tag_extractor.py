@@ -31,8 +31,8 @@ INVALID_YOUTUBE_URLS = [
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
 async def test_extract_tags_valid_links(url: str, tag_extractor: TagExtractor) -> None:
     """Test for extracting tags with valid links"""
-    result = await tag_extractor.extract_tags(url)
-    assert result == "Tags saved to file and copied to clipboard!"
+    result = await tag_extractor.extract_tags(url, False)
+    assert result == "Tags saved to file"
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
