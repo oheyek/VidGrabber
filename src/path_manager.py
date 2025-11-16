@@ -70,7 +70,6 @@ class PathManager:
         :return: Path object for the download directory
         :raises RuntimeError: If directory cannot be created due to permissions
         """
-        # Lazy loading - paths będą załadowane tylko przy pierwszym użyciu
         if ext not in self.paths:
             # Create default path ONLY for this specific extension
             fallback = Path.home() / "Downloads" / ext
