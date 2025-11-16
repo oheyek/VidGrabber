@@ -13,11 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Make yt-dlp executable
-        run: chmod +x binaries/linux/yt-dlp
-
-      - name: Pulling git repo
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Pull LFS files
+        run: git lfs pull
+
+      - name: Make yt-dlp executable
+        run: |
+          chmod +x binaries/linux/yt-dlp
+          ls -la binaries/linux/yt-dlp
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
