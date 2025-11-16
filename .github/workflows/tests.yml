@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Make yt-dlp executable
+        run: chmod +x binaries/linux/yt-dlp
+
       - name: Pulling git repo
         uses: actions/checkout@v4
 
