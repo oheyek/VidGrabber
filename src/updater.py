@@ -91,14 +91,8 @@ def check_file_or_exit(path: Path, name: str) -> None:
         sys.exit(1)
 
     if platform.system().lower() != "windows":
-        if not os.access(path, os.X_OK):
-            try:
-                ensure_executable(path)
-            except Exception:
-                print(
-                    f"Error: {name} at {path} is not executable and permissions couldn't be changed."
-                )
-                sys.exit(1)
+        ensure_executable(path)
+
         if not os.access(path, os.X_OK):
             print(f"Error: {name} at {path} is not executable.")
             sys.exit(1)
