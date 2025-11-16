@@ -187,8 +187,17 @@ async def initialize_binaries() -> None:
         sys.exit(1)
 
     try:
-        check_file_or_exit(get_yt_dlp_path(), "yt-dlp")
-        check_file_or_exit(get_ffmpeg_path(), "ffmpeg")
+        yt_dlp = get_yt_dlp_path()
+        ffmpeg = get_ffmpeg_path()
+
+        if platform.system().lower() != "windows":
+            print(f"Setting executable permissions for {yt_dlp.name}...")
+            ensure_executable(yt_dlp)
+            print(f"Setting executable permissions for {ffmpeg.name}...")
+            ensure_executable(ffmpeg)
+
+        check_file_or_exit(yt_dlp, "yt-dlp")
+        check_file_or_exit(ffmpeg, "ffmpeg")
     except OSError as e:
         print(f"Error determining binaries directory: {e}")
         sys.exit(1)
@@ -196,3 +205,4 @@ async def initialize_binaries() -> None:
     # Proceed with async verification and updates
     await asyncio.gather(check_yt_dlp_version(), verify_ffmpeg())
     await update_yt_dlp()
+
