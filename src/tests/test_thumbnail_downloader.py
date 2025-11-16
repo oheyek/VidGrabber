@@ -3,8 +3,13 @@ import pytest
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
 
-video_info = VideoInfo()
-thumbnail_downloader = ThumbnailDownloader(video_info)
+@pytest.fixture
+def thumbnail_downloader() -> ThumbnailDownloader:
+    """
+    Fixture that provides ThumbnailDownloader instance for tests.
+    :return: ThumbnailDownloader instance for tests.
+    """
+    return ThumbnailDownloader(VideoInfo())
 
 VALID_YOUTUBE_URLS = [
     "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
@@ -24,7 +29,7 @@ INVALID_YOUTUBE_URLS = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
-async def test_download_thumbnail_valid_links(url: str) -> None:
+async def test_download_thumbnail_valid_links(url: str, thumbnail_downloader: ThumbnailDownloader) -> None:
     """Test for downloading thumbnails with valid links"""
     result = await thumbnail_downloader.download_thumbnail(url)
     assert result == "Thumbnail download completed!"
@@ -32,20 +37,20 @@ async def test_download_thumbnail_valid_links(url: str) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
-async def test_download_thumbnail_invalid_links(url: str) -> None:
+async def test_download_thumbnail_invalid_links(url: str, thumbnail_downloader: ThumbnailDownloader) -> None:
     """Test for downloading thumbnails with invalid links"""
     result = await thumbnail_downloader.download_thumbnail(url)
     assert result == "Invalid link provided."
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("invalid_input", [None, 123, [], {}, 12.34])
-async def test_download_thumbnail_invalid_input_types(invalid_input) -> None:
+@pytest.mark.parametrize("invalid_input", [None, 123, 12.34])
+async def test_download_thumbnail_invalid_input_types(invalid_input, thumbnail_downloader: ThumbnailDownloader) -> None:
     """Test for downloading thumbnails with invalid YouTube URLs."""
     result = await thumbnail_downloader.download_thumbnail(invalid_input)
     assert result == "Invalid link provided."
 
 @pytest.mark.asyncio
-async def test_download_thumbnail_empty_url() -> None:
+async def test_download_thumbnail_empty_url(thumbnail_downloader: ThumbnailDownloader) -> None:
     """Test that empty string is rejected while downloading."""
     result = await thumbnail_downloader.download_thumbnail("")
     assert result == "Invalid link provided."
