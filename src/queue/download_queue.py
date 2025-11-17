@@ -2,10 +2,11 @@ import asyncio
 from typing import Any
 
 from src.downloader import Downloader
-from src.video_info import VideoInfo
-from src.thumbnail_downloader import ThumbnailDownloader
-from src.tag_extractor import TagExtractor
 from src.logger import log_call
+from src.tag_extractor import TagExtractor
+from src.thumbnail_downloader import ThumbnailDownloader
+from src.video_info import VideoInfo
+
 
 class DownloadQueue:
     def __init__(self) -> None:
@@ -62,6 +63,8 @@ class DownloadQueue:
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
+        if link in self.mp3_queue:
+            return "Audio already in queue."
         if len(self.mp3_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.mp3_queue.append(link)
@@ -76,6 +79,8 @@ class DownloadQueue:
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
+        if link in self.wav_queue:
+            return "Audio already in queue."
         if len(self.wav_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.wav_queue.append(link)
@@ -90,6 +95,8 @@ class DownloadQueue:
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
+        if link in self.thumbnail_queue:
+            return "Thumbnail already in queue."
         if len(self.thumbnail_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.thumbnail_queue.append(link)
@@ -104,6 +111,8 @@ class DownloadQueue:
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
+        if link in self.tags_queue:
+            return "Tags already in queue."
         if len(self.tags_queue) >= self.max_downloads:
             return "Queue limit reached."
         self.tags_queue.append(link)
