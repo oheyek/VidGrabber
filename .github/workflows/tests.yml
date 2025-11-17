@@ -2,11 +2,9 @@ name: Tests
 
 on:
   push:
-    branches:
-      - dev
+    branches: [ dev ]
   pull_request:
-    branches:
-      - dev
+    branches: [ dev ]
 
 jobs:
   test:
@@ -17,19 +15,54 @@ jobs:
         python-version: [ '3.12' ]
 
     steps:
-      - name: Checkout code
+      - name: Checkout code (no LFS)
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
 
-      - name: Pull LFS files
-        run: git lfs pull
-
-      - name: Make yt-dlp executable (Unix)
-        if: runner.os != 'Windows'
+      - name: Download yt-dlp (Linux)
+        if: runner.os == 'Linux'
         run: |
+          mkdir -p binaries/linux
+          curl -L -o binaries/linux/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
           chmod +x binaries/linux/yt-dlp
-          ls -la binaries/linux/yt-dlp
+          ls -la binaries/linux
+
+      - name: Download yt-dlp (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p binaries/macos
+          curl -L -o binaries/macos/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+          chmod +x binaries/macos/yt-dlp
+          ls -la binaries/macos
+
+      - name: Download yt-dlp (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path binaries\windows | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "binaries\windows\yt-dlp.exe"
+          dir .\binaries\windows
+
+      - name: Install ffmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+
+      - name: Install ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ffmpeg || true
+          ffmpeg -version
+
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          choco install -y ffmpeg
+          ffmpeg -version
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -41,7 +74,7 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install all dependencies
+      - name: Install dependencies & test tools
         run: |
           uv pip install --system -r requirements.txt
           uv pip install --system pytest pytest-cov
