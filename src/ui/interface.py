@@ -1,16 +1,18 @@
 import asyncio
+import os
 import threading
 from pathlib import Path
-
-import customtkinter as ctk
-import os
 from tkinter import filedialog
 
+import customtkinter as ctk
+
 from src.downloader import Downloader
+from src.path_manager import PathManager
+from src.queue.download_queue import DownloadQueue
 from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
+from src.ui.queue_window import QueueWindow
 from src.video_info import VideoInfo
-from src.path_manager import PathManager
 
 
 class AppUI(ctk.CTk):
@@ -26,6 +28,7 @@ class AppUI(ctk.CTk):
         Class of the app interface.
         """
         super().__init__()
+        self.queue_window = None
         ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.1)")
         self.geometry("1000x350")
@@ -33,6 +36,7 @@ class AppUI(ctk.CTk):
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(fill="both", expand=True)
         self.path_manager = PathManager()
+        self.download_queue = DownloadQueue()
 
         # ASCII Art Banner
         ascii_art: str = r"""
@@ -147,14 +151,26 @@ class AppUI(ctk.CTk):
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
+        settings_queue_row = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        settings_queue_row.pack(pady=(5, 10))
+
         self.settings_button = ctk.CTkButton(
-            self.main_frame,
-            text="⚙️Settings",
+            settings_queue_row,
+            text="⚙️ Settings",
             width=120,
             height=30,
             command=self.open_settings_window,
         )
-        self.settings_button.pack(pady=(5, 10))
+        self.settings_button.pack(side="left", padx=5)
+
+        self.queue_button = ctk.CTkButton(
+            settings_queue_row,
+            text="📋 Queue Manager",
+            width=120,
+            height=30,
+            command=self.open_queue_window,
+        )
+        self.queue_button.pack(side="left", padx=5)
 
     def open_settings_window(self) -> None:
         """
@@ -292,6 +308,15 @@ class AppUI(ctk.CTk):
             tabview.tab("📁 Downloads"), "Tags (CSV)", "tags"
         )
 
+    def open_queue_window(self) -> None:
+        """
+        Open queue manager window
+        """
+        if self.queue_window is None or not self.queue_window.winfo_exists():
+            self.queue_window = QueueWindow(self, self.download_queue)
+        else:
+            self.queue_window.focus()
+
     def _set_all_buttons_state(self, state: str) -> None:
         """
         Enable or disable all operation buttons.
@@ -306,7 +331,7 @@ class AppUI(ctk.CTk):
 
     def _run_async_operation(
         self,
-            loading_msg: str,
+        loading_msg: str,
         success_msg: str,
         error_msg: str,
         coroutine_func,
@@ -390,77 +415,267 @@ class AppUI(ctk.CTk):
             self._set_all_buttons_state("enabled")
         else:
             self.download_info.configure(text=f"❌ {result}")
-            self.video_info_button.configure(
-                state="enabled"
-            )
+            self.video_info_button.configure(state="enabled")
 
     def handle_download_thumbnail(self) -> None:
-        """
-        Synchronous wrapper for the async download_thumbnail method
-        """
-        async def download():
-            link = self.link_field.get()
-            video_info = VideoInfo()
-            thumbnail_downloader = ThumbnailDownloader(video_info=video_info, path_manager=self.path_manager)
-            return await thumbnail_downloader.download_thumbnail(link)
+        """Show dialog with Download/Add to Queue options"""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Thumbnail Download")
+        dialog.geometry("350x200")
+        dialog.transient(self)
+        dialog.after(100, lambda: dialog.grab_set())
 
-        self._run_async_operation(
-            "🖼️ Downloading thumbnail...",
-            "✅ Thumbnail downloaded successfully!",
-            "❌ Failed to download thumbnail",
-            download
+        self.update_idletasks()
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+        dialog_width = 350
+        dialog_height = 200
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        label = ctk.CTkLabel(
+            dialog,
+            text="🖼️ Thumbnail (JPG)",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
+        label.pack(pady=30)
+
+        def download_now():
+            dialog.destroy()
+            async def download():
+                link = self.link_field.get()
+                video_info = VideoInfo()
+                thumbnail_downloader = ThumbnailDownloader(video_info=video_info, path_manager=self.path_manager)
+                return await thumbnail_downloader.download_thumbnail(link)
+
+            self._run_async_operation(
+                "🖼️ Downloading thumbnail...",
+                "✅ Thumbnail downloaded successfully!",
+                "❌ Failed to download thumbnail",
+                download
+            )
+
+        def add_to_queue():
+            result = self.download_queue.add_thumbnail(self.link_field.get())
+            dialog.destroy()
+            self.download_info.configure(text=f"✅ {result}")
+
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20)
+
+        cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100)
+        cancel_btn.pack(side="left", padx=5)
+
+        queue_btn = ctk.CTkButton(
+            btn_frame,
+            text="➕ Add to Queue",
+            command=add_to_queue,
+            width=120,
+            fg_color="orange",
+            hover_color="darkorange"
+        )
+        queue_btn.pack(side="left", padx=5)
+
+        download_btn = ctk.CTkButton(btn_frame, text="⬇️ Download", command=download_now, width=100)
+        download_btn.pack(side="left", padx=5)
 
     def handle_download_mp3(self) -> None:
-        """
-        Synchronous wrapper for the async download_mp3 method
-        """
-        async def download():
-            link = self.link_field.get()
-            video_info = VideoInfo()
-            mp3_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
-            return await mp3_downloader.download_audio(link, audio_format="mp3")
+        """Show dialog with Download/Add to Queue options"""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("MP3 Download")
+        dialog.geometry("350x200")
+        dialog.transient(self)
+        dialog.after(100, lambda: dialog.grab_set())
 
-        self._run_async_operation(
-            "🎵 Downloading MP3 audio...",
-            "✅ MP3 downloaded successfully!",
-            "❌ Failed to download MP3",
-            download
+        self.update_idletasks()
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+        dialog_width = 350
+        dialog_height = 200
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        label = ctk.CTkLabel(
+            dialog,
+            text="🎵 MP3 Audio",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
+        label.pack(pady=30)
+
+        def download_now():
+            dialog.destroy()
+            async def download():
+                link = self.link_field.get()
+                video_info = VideoInfo()
+                mp3_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
+                return await mp3_downloader.download_audio(link, audio_format="mp3")
+
+            self._run_async_operation(
+                "🎵 Downloading MP3 audio...",
+                "✅ MP3 downloaded successfully!",
+                "❌ Failed to download MP3",
+                download
+            )
+
+        def add_to_queue():
+            result = self.download_queue.add_mp3_audio(self.link_field.get())
+            dialog.destroy()
+            self.download_info.configure(text=f"✅ {result}")
+
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20)
+
+        cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100)
+        cancel_btn.pack(side="left", padx=5)
+
+        queue_btn = ctk.CTkButton(
+            btn_frame,
+            text="➕ Add to Queue",
+            command=add_to_queue,
+            width=120,
+            fg_color="orange",
+            hover_color="darkorange"
+        )
+        queue_btn.pack(side="left", padx=5)
+
+        download_btn = ctk.CTkButton(btn_frame, text="⬇️ Download", command=download_now, width=100)
+        download_btn.pack(side="left", padx=5)
 
     def handle_download_wav(self) -> None:
-        """
-        Synchronous wrapper for the async download_wav method
-        """
-        async def download():
-            link = self.link_field.get()
-            video_info = VideoInfo()
-            wav_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
-            return await wav_downloader.download_audio(link, audio_format="wav")
+        """Show dialog with Download/Add to Queue options"""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("WAV Download")
+        dialog.geometry("350x200")
+        dialog.transient(self)
+        dialog.after(100, lambda: dialog.grab_set())
 
-        self._run_async_operation(
-            "🎵 Downloading WAV audio...",
-            "✅ WAV downloaded successfully!",
-            "❌ Failed to download WAV",
-            download
+        self.update_idletasks()
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+        dialog_width = 350
+        dialog_height = 200
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        label = ctk.CTkLabel(
+            dialog,
+            text="🎵 WAV Audio",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
+        label.pack(pady=30)
+
+        def download_now():
+            dialog.destroy()
+            async def download():
+                link = self.link_field.get()
+                video_info = VideoInfo()
+                wav_downloader = Downloader(video_info=video_info, path_manager=self.path_manager)
+                return await wav_downloader.download_audio(link, audio_format="wav")
+
+            self._run_async_operation(
+                "🎵 Downloading WAV audio...",
+                "✅ WAV downloaded successfully!",
+                "❌ Failed to download WAV",
+                download
+            )
+
+        def add_to_queue():
+            result = self.download_queue.add_wav_audio(self.link_field.get())
+            dialog.destroy()
+            self.download_info.configure(text=f"✅ {result}")
+
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20)
+
+        cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100)
+        cancel_btn.pack(side="left", padx=5)
+
+        queue_btn = ctk.CTkButton(
+            btn_frame,
+            text="➕ Add to Queue",
+            command=add_to_queue,
+            width=120,
+            fg_color="orange",
+            hover_color="darkorange"
+        )
+        queue_btn.pack(side="left", padx=5)
+
+        download_btn = ctk.CTkButton(btn_frame, text="⬇️ Download", command=download_now, width=100)
+        download_btn.pack(side="left", padx=5)
 
     def handle_extract_tags(self) -> None:
-        """
-        Synchronous wrapper for the async extract_tags method
-        """
-        async def extract():
-            link = self.link_field.get()
-            video_info = VideoInfo()
-            tag_extract = TagExtractor(video_info=video_info, path_manager=self.path_manager)
-            return await tag_extract.extract_tags(link)
+        """Show dialog with Extract/Add to Queue options"""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Tags Extraction")
+        dialog.geometry("350x200")
+        dialog.transient(self)
+        dialog.after(100, lambda: dialog.grab_set())
 
-        self._run_async_operation(
-            "🏷️ Extracting video tags...",
-            "✅ Tags extracted to file and copied to clipboard!",
-            "❌ Failed to extract tags",
-            extract
+        self.update_idletasks()
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+        dialog_width = 350
+        dialog_height = 200
+        x = main_x + (main_width - dialog_width) // 2
+        y = main_y + (main_height - dialog_height) // 2
+        dialog.geometry(f"+{x}+{y}")
+
+        label = ctk.CTkLabel(
+            dialog,
+            text="🏷️ Tags (CSV)",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
+        label.pack(pady=30)
+
+        def extract_now():
+            dialog.destroy()
+            async def extract():
+                link = self.link_field.get()
+                video_info = VideoInfo()
+                tag_extract = TagExtractor(video_info=video_info, path_manager=self.path_manager)
+                return await tag_extract.extract_tags(link)
+
+            self._run_async_operation(
+                "🏷️ Extracting video tags...",
+                "✅ Tags extracted to file and copied to clipboard!",
+                "❌ Failed to extract tags",
+                extract
+            )
+
+        def add_to_queue():
+            result = self.download_queue.add_tags(self.link_field.get())
+            dialog.destroy()
+            self.download_info.configure(text=f"✅ {result}")
+
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20)
+
+        cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100)
+        cancel_btn.pack(side="left", padx=5)
+
+        queue_btn = ctk.CTkButton(
+            btn_frame,
+            text="➕ Add to Queue",
+            command=add_to_queue,
+            width=120,
+            fg_color="orange",
+            hover_color="darkorange"
+        )
+        queue_btn.pack(side="left", padx=5)
+
+        extract_btn = ctk.CTkButton(btn_frame, text="🔍 Extract", command=extract_now, width=100)
+        extract_btn.pack(side="left", padx=5)
 
     def show_quality_selection(self) -> None:
         """
@@ -472,7 +687,7 @@ class AppUI(ctk.CTk):
 
         dialog = ctk.CTkToplevel(self)
         dialog.title("Select Video Quality")
-        dialog.geometry("400x400")
+        dialog.geometry("400x450")
         dialog.transient(self)
         dialog.after(100, lambda: dialog.grab_set())
         dialog.update_idletasks()
@@ -514,6 +729,13 @@ class AppUI(ctk.CTk):
             dialog.destroy()
             self.handle_download_mp4(video_quality)
 
+        def on_add_to_queue():
+            video_quality = selected_quality.get()
+            quality_height = int(video_quality.split()[1].rstrip("p"))
+            result = self.download_queue.add_video(self.current_link, quality_height)
+            dialog.destroy()
+            self.download_info.configure(text=f"✅ {result}")
+
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         button_frame.pack(pady=20)
 
@@ -521,6 +743,16 @@ class AppUI(ctk.CTk):
             button_frame, text="Cancel", command=dialog.destroy, width=100
         )
         cancel_btn.pack(side="left", padx=5)
+
+        queue_btn = ctk.CTkButton(
+            button_frame,
+            text="➕ Add to Queue",
+            command=on_add_to_queue,
+            width=120,
+            fg_color="orange",
+            hover_color="darkorange",
+        )
+        queue_btn.pack(side="left", padx=5)
 
         download_btn = ctk.CTkButton(
             button_frame, text="Download", command=on_download, width=100
