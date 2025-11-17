@@ -14,7 +14,7 @@ class QueueWindow(ctk.CTkToplevel):
 
         self.title("Queue Manager")
         self.geometry("800x600")
-        self.resizable(True, True)
+        self.resizable(False, False)
 
         header = ctk.CTkLabel(
             self,
@@ -78,30 +78,28 @@ class QueueWindow(ctk.CTkToplevel):
 
         if self.queue.mp3_queue:
             has_items = True
-            items = [(item.link, None) for item in self.queue.mp3_queue]
-            self._create_queue_section("🎵 Audio (MP3)", items, "mp3")
+            self._create_queue_section("🎵 Audio (MP3)", self.queue.mp3_queue, "mp3")
 
         if self.queue.wav_queue:
             has_items = True
-            items = [(item.link, None) for item in self.queue.wav_queue]
-            self._create_queue_section("🎵 Audio (WAV)", items, "wav")
+            self._create_queue_section("🎵 Audio (WAV)", self.queue.wav_queue, "wav")
 
         if self.queue.thumbnail_queue:
             has_items = True
-            items = [(item.link, None) for item in self.queue.thumbnail_queue]
-            self._create_queue_section("🖼️ Thumbnails (JPG)", items, "jpg")
+            self._create_queue_section(
+                "🖼️ Thumbnails (JPG)", self.queue.thumbnail_queue, "jpg"
+            )
 
         if self.queue.tags_queue:
             has_items = True
-            items = [(item.link, None) for item in self.queue.tags_queue]
-            self._create_queue_section("🏷️ Tags (CSV)", items, "csv")
+            self._create_queue_section("🏷️ Tags (CSV)", self.queue.tags_queue, "csv")
 
         if not has_items:
             empty_label = ctk.CTkLabel(
                 self.queue_display,
                 text="Queue is empty",
                 font=ctk.CTkFont(size=16),
-                text_color="gray"
+                text_color="gray",
             )
             empty_label.pack(pady=50)
 
@@ -113,49 +111,48 @@ class QueueWindow(ctk.CTkToplevel):
         header_frame.pack(fill="x", padx=10, pady=5)
 
         title_label = ctk.CTkLabel(
-            header_frame,
-            text=title,
-            font=ctk.CTkFont(size=14, weight="bold")
+            header_frame, text=title, font=ctk.CTkFont(size=14, weight="bold")
         )
         title_label.pack(side="left")
 
         if queue_type == "mp4":
-            for link, quality in items:
-                self._create_queue_item(
-                    section_frame,
-                    link,
-                    queue_type,
-                    quality=quality,
-                    extra_info=f"{quality}p"
-                )
+            for link, quality_list in self.queue.videos_queue.items():
+                for quality_tuple in quality_list:
+                    quality = quality_tuple[0]
+                    video_title = quality_tuple[1]
+                    self._create_queue_item(
+                        section_frame,
+                        link,
+                        queue_type,
+                        quality=quality,
+                        display_text=video_title,
+                        extra_info=f"{quality}p",
+                    )
         else:
-            for link, _ in items:
+            for item in items:
                 self._create_queue_item(
-                    section_frame,
-                    link,
-                    queue_type
+                    section_frame, item.link, queue_type, display_text=item.title
                 )
 
     def _create_queue_item(
-            self,
-            parent,
-            link: str,
-            queue_type: str,
-            quality: int = None,
-            extra_info: str = None
+        self,
+        parent,
+        link: str,
+        queue_type: str,
+        quality: int = None,
+        display_text: str = None,
+        extra_info: str = None,
     ):
         item_frame = ctk.CTkFrame(parent)
         item_frame.pack(pady=3, padx=10, fill="x")
 
-        link_text = link if len(link) <= 60 else link[:57] + "..."
+        text = display_text if display_text else link
+        if len(text) > 60:
+            text = text[:57] + "..."
         if extra_info:
-            link_text = f"{link_text} [{extra_info}]"
+            text = f"{text} [{extra_info}]"
 
-        link_label = ctk.CTkLabel(
-            item_frame,
-            text=link_text,
-            anchor="w"
-        )
+        link_label = ctk.CTkLabel(item_frame, text=text, anchor="w")
         link_label.pack(side="left", padx=10, fill="x", expand=True)
 
         remove_btn = ctk.CTkButton(
@@ -164,7 +161,7 @@ class QueueWindow(ctk.CTkToplevel):
             width=30,
             command=lambda: self._remove_item(link, queue_type, quality),
             fg_color="red",
-            hover_color="darkred"
+            hover_color="darkred",
         )
         remove_btn.pack(side="right", padx=5)
 

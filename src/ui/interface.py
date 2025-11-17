@@ -37,6 +37,8 @@ class AppUI(ctk.CTk):
         self.main_frame.pack(fill="both", expand=True)
         self.path_manager = PathManager()
         self.download_queue = DownloadQueue()
+        self.queue_window = None
+        self.current_title = ""
 
         # ASCII Art Banner
         ascii_art: str = r"""
@@ -424,10 +426,12 @@ class AppUI(ctk.CTk):
 
         if isinstance(result, list):
             title = result[0]
+            self.current_title = title
             self.available_qualities = [q for q in result[4:] if q.startswith("mp4")]
             self.download_info.configure(text=title)
             self._set_all_buttons_state("enabled")
         else:
+            self.current_title = "" 
             self.download_info.configure(text=f"❌ {result}")
             self.video_info_button.configure(state="enabled")
 
@@ -480,7 +484,7 @@ class AppUI(ctk.CTk):
                 asyncio.set_event_loop(loop)
                 try:
                     result = loop.run_until_complete(
-                        self.download_queue.add_thumbnail(link, link)
+                        self.download_queue.add_thumbnail(link, self.current_title)
                     )
                     if "added to queue" in result.lower():
                         self.after(
@@ -572,7 +576,7 @@ class AppUI(ctk.CTk):
                 asyncio.set_event_loop(loop)
                 try:
                     result = loop.run_until_complete(
-                        self.download_queue.add_mp3_audio(link, link)
+                        self.download_queue.add_mp3_audio(link, self.current_title)
                     )
                     if "added to queue" in result.lower():
                         self.after(
@@ -664,7 +668,7 @@ class AppUI(ctk.CTk):
                 asyncio.set_event_loop(loop)
                 try:
                     result = loop.run_until_complete(
-                        self.download_queue.add_wav_audio(link, link)
+                        self.download_queue.add_wav_audio(link, self.current_title)
                     )
                     if "added to queue" in result.lower():
                         self.after(0, lambda: self._show_temporary_message(
@@ -748,7 +752,7 @@ class AppUI(ctk.CTk):
                 asyncio.set_event_loop(loop)
                 try:
                     result = loop.run_until_complete(
-                        self.download_queue.add_tags(link, link)
+                        self.download_queue.add_tags(link, self.current_title)
                     )
                     if "added to queue" in result.lower():
                         self.after(
@@ -857,7 +861,9 @@ class AppUI(ctk.CTk):
                 asyncio.set_event_loop(loop)
                 try:
                     result = loop.run_until_complete(
-                        self.download_queue.add_video(link, quality_height, link)
+                        self.download_queue.add_video(
+                            link, quality_height, self.current_title
+                        )
                     )
                     if "added to queue" in result.lower():
                         self.after(
