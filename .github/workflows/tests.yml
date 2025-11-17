@@ -24,8 +24,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir -p binaries/linux
-          curl -L -o binaries/linux/yt_dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt_dlp
-          chmod +x binaries/linux/yt_dlp
+          curl -L -o binaries/linux/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+          chmod +x binaries/linux/yt-dlp
           ls -la binaries/linux
 
       - name: Download yt-dlp (macOS)
