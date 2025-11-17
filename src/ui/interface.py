@@ -358,6 +358,7 @@ class AppUI(ctk.CTk):
         """
         self._set_all_buttons_state("disabled")
         self.download_info.configure(text=loading_msg)
+        self._is_downloading = True
 
         self.progress_bar.pack(pady=5)
         self.progress_bar.start()
@@ -384,6 +385,7 @@ class AppUI(ctk.CTk):
                     self.download_info.configure(text=f"{error_msg}: {result}")
 
             self._set_all_buttons_state("enabled")
+            self._is_downloading = False
 
         def run():
             asyncio.run(run_operation())
@@ -1049,9 +1051,21 @@ class AppUI(ctk.CTk):
         entry.pack(side="left", padx=(0, 5))
 
         def on_browse():
+            if hasattr(self, "_is_downloading") and self._is_downloading:
+                return
+
+            if (
+                hasattr(self, "queue_window")
+                and self.queue_window
+                and self.queue_window.winfo_exists()
+                and hasattr(self.queue_window, "_is_downloading")
+                and self.queue_window._is_downloading
+            ):
+                return
+
             folder = filedialog.askdirectory(
                 title="Select Download Folder",
-                initialdir=entry.get() or os.path.expanduser("~/Downloads")
+                initialdir=entry.get() or os.path.expanduser("~/Downloads"),
             )
             if folder:
                 entry.configure(state="normal")
@@ -1060,9 +1074,7 @@ class AppUI(ctk.CTk):
                 entry.configure(state="readonly")
                 self.path_manager.paths[extension] = Path(folder)
                 self.path_manager.save_settings()
-                self.download_info.configure(
-                    text=f"✅ Path for {extension} saved!",
-                )
+                self.download_info.configure(text=f"✅ Path for {extension} saved!")
 
         browse_btn = ctk.CTkButton(
             row,

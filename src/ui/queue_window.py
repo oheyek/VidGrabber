@@ -11,6 +11,7 @@ class QueueWindow(ctk.CTkToplevel):
         super().__init__(parent)
         self.master = parent
         self.queue = download_queue
+        self._is_downloading = False
 
         self.title("Queue Manager")
         self.geometry("800x650")
@@ -39,7 +40,7 @@ class QueueWindow(ctk.CTkToplevel):
         self.progress_bar = ctk.CTkProgressBar(
             progress_frame, width=600, mode="indeterminate"
         )
-        self.progress_bar.pack(pady=5)
+        self.progress_bar.pack(pady=(5, 15))
         self.progress_bar.pack_forget()
 
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -81,6 +82,8 @@ class QueueWindow(ctk.CTkToplevel):
         self.clear_all_btn.configure(state=state)
 
     def refresh_queue_display(self):
+        self.remove_buttons = []
+
         for widget in self.queue_display.winfo_children():
             widget.destroy()
 
@@ -153,14 +156,20 @@ class QueueWindow(ctk.CTkToplevel):
                     section_frame, item.link, queue_type, display_text=item.title
                 )
 
+    def _set_remove_buttons_state(self, state: str) -> None:
+        if hasattr(self, "remove_buttons"):
+            for btn in self.remove_buttons:
+                if btn.winfo_exists():
+                    btn.configure(state=state)
+
     def _create_queue_item(
-        self,
-        parent,
-        link: str,
-        queue_type: str,
-        quality: int = None,
-        display_text: str = None,
-        extra_info: str = None,
+            self,
+            parent,
+            link: str,
+            queue_type: str,
+            quality: int = None,
+            display_text: str = None,
+            extra_info: str = None,
     ):
         item_frame = ctk.CTkFrame(parent)
         item_frame.pack(pady=3, padx=10, fill="x")
@@ -183,6 +192,10 @@ class QueueWindow(ctk.CTkToplevel):
             hover_color="darkred",
         )
         remove_btn.pack(side="right", padx=5)
+
+        if not hasattr(self, "remove_buttons"):
+            self.remove_buttons = []
+        self.remove_buttons.append(remove_btn)
 
     def _remove_item(self, link: str, queue_type: str, quality: int = None):
         if queue_type == "mp4":
@@ -240,7 +253,11 @@ class QueueWindow(ctk.CTkToplevel):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
+                self._is_downloading = True
+
                 self.after(0, lambda: self._set_download_buttons_state("disabled"))
+                self.after(0, lambda: self._set_remove_buttons_state("disabled"))
+
                 if hasattr(self.master, "_set_all_buttons_state"):
                     self.master.after(
                         0, lambda: self.master._set_all_buttons_state("disabled")
@@ -252,16 +269,16 @@ class QueueWindow(ctk.CTkToplevel):
                         0, lambda: self.master.queue_button.configure(state="normal")
                     )
 
-                self.after(0, lambda: self.progress_bar.pack(pady=5))
+                self.after(0, lambda: self.progress_bar.pack(pady=(5, 15)))
                 self.after(0, lambda: self.progress_bar.start())
 
                 tasks = []
                 total_items = (
-                    sum(len(q) for q in self.queue.videos_queue.values())
-                    + len(self.queue.mp3_queue)
-                    + len(self.queue.wav_queue)
-                    + len(self.queue.thumbnail_queue)
-                    + len(self.queue.tags_queue)
+                        sum(len(q) for q in self.queue.videos_queue.values())
+                        + len(self.queue.mp3_queue)
+                        + len(self.queue.wav_queue)
+                        + len(self.queue.thumbnail_queue)
+                        + len(self.queue.tags_queue)
                 )
 
                 if total_items == 0:
@@ -271,10 +288,12 @@ class QueueWindow(ctk.CTkToplevel):
                     self.after(0, lambda: self.progress_bar.stop())
                     self.after(0, lambda: self.progress_bar.pack_forget())
                     self.after(0, lambda: self._set_download_buttons_state("normal"))
+                    self.after(0, lambda: self._set_remove_buttons_state("normal"))
                     if hasattr(self.master, "_set_all_buttons_state"):
                         self.master.after(
                             0, lambda: self.master._set_all_buttons_state("enabled")
                         )
+                    self._is_downloading = False
                     return
 
                 self.after(
@@ -306,13 +325,17 @@ class QueueWindow(ctk.CTkToplevel):
                 )
                 self.after(2000, lambda: self.download_status.configure(text=""))
 
-                self.after(200, self.refresh_queue_display)
+                self.after(0, self.refresh_queue_display)
 
                 self.after(0, lambda: self._set_download_buttons_state("normal"))
+                self.after(0, lambda: self._set_remove_buttons_state("normal"))
+
                 if hasattr(self.master, "_set_all_buttons_state"):
                     self.master.after(
                         0, lambda: self.master._set_all_buttons_state("enabled")
                     )
+
+                self._is_downloading = False
 
             finally:
                 loop.close()
