@@ -13,7 +13,7 @@ class QueueWindow(ctk.CTkToplevel):
         self.queue = download_queue
 
         self.title("Queue Manager")
-        self.geometry("800x750")
+        self.geometry("800x650")
         self.resizable(True, True)
 
         header = ctk.CTkLabel(
@@ -26,19 +26,24 @@ class QueueWindow(ctk.CTkToplevel):
         self.queue_display = ctk.CTkScrollableFrame(self, width=740, height=400)
         self.queue_display.pack(pady=10, padx=20, fill="both", expand=True)
 
+        progress_frame = ctk.CTkFrame(self, fg_color="transparent")
+        progress_frame.pack(pady=(10, 0), fill="x")
+
         self.download_status = ctk.CTkLabel(
-            self,
+            progress_frame,
             text="",
             font=ctk.CTkFont(size=14),
         )
         self.download_status.pack(pady=(5, 5))
 
-        self.progress_bar = ctk.CTkProgressBar(self, width=600, mode="indeterminate")
+        self.progress_bar = ctk.CTkProgressBar(
+            progress_frame, width=600, mode="indeterminate"
+        )
         self.progress_bar.pack(pady=5)
         self.progress_bar.pack_forget()
 
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
-        button_frame.pack(pady=10)
+        button_frame.pack(pady=(15, 20))
 
         refresh_btn = ctk.CTkButton(
             button_frame,

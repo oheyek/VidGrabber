@@ -397,6 +397,10 @@ class AppUI(ctk.CTk):
         Run the async function in a separate thread to avoid event loop conflicts
         """
         self._set_all_buttons_state("disabled")
+
+        if self.queue_window and self.queue_window.winfo_exists():
+            self.queue_window._set_download_buttons_state("disabled")
+
         self.download_info.configure(text="📥 Downloading video data...")
         thread: threading.Thread = threading.Thread(
             target=self._run_async_task, daemon=True
@@ -430,10 +434,16 @@ class AppUI(ctk.CTk):
             self.available_qualities = [q for q in result[4:] if q.startswith("mp4")]
             self.download_info.configure(text=title)
             self._set_all_buttons_state("enabled")
+
+            if self.queue_window and self.queue_window.winfo_exists():
+                self.queue_window._set_download_buttons_state("normal")
         else:
-            self.current_title = "" 
+            self.current_title = ""
             self.download_info.configure(text=f"❌ {result}")
             self.video_info_button.configure(state="enabled")
+
+            if self.queue_window and self.queue_window.winfo_exists():
+                self.queue_window._set_download_buttons_state("normal")
 
     def handle_download_thumbnail(self) -> None:
         """Show dialog with Download/Add to Queue options"""
@@ -850,9 +860,13 @@ class AppUI(ctk.CTk):
             self.download_info.configure(text="❌ No quality options available")
             return
 
+        base_height = 200
+        quality_height = len(self.available_qualities) * 40
+        total_height = min(base_height + quality_height, 600)
+
         dialog = ctk.CTkToplevel(self)
         dialog.title("Select Video Quality")
-        dialog.geometry("400x450")
+        dialog.geometry(f"400x{total_height}")
         dialog.transient(self)
         dialog.after(100, lambda: dialog.grab_set())
         dialog.update_idletasks()
@@ -862,13 +876,13 @@ class AppUI(ctk.CTk):
         main_width = self.winfo_width()
         main_height = self.winfo_height()
 
-        dialog_width = dialog.winfo_width()
-        dialog_height = dialog.winfo_height()
+        dialog_width = 400
+        dialog_height = total_height
 
         x = main_x + (main_width - dialog_width) // 2
         y = main_y + (main_height - dialog_height) // 2
 
-        dialog.geometry(f"+{x}+{y}")
+        dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
 
         label = ctk.CTkLabel(
             dialog,
@@ -877,17 +891,22 @@ class AppUI(ctk.CTk):
         )
         label.pack(pady=20)
 
+        quality_frame = ctk.CTkScrollableFrame(
+            dialog, width=350, height=min(quality_height, 300)
+        )
+        quality_frame.pack(pady=10, padx=20, fill="both", expand=True)
+
         selected_quality = ctk.StringVar(value=self.available_qualities[0])
 
         for quality in self.available_qualities:
             radio = ctk.CTkRadioButton(
-                dialog,
+                quality_frame,
                 text=quality,
                 variable=selected_quality,
                 value=quality,
                 font=ctk.CTkFont(size=12),
             )
-            radio.pack(pady=5)
+            radio.pack(pady=5, anchor="w", padx=10)
 
         def on_download():
             video_quality = selected_quality.get()
