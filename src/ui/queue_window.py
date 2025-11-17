@@ -9,83 +9,55 @@ from src.queue.download_queue import DownloadQueue
 class QueueWindow(ctk.CTkToplevel):
     def __init__(self, parent, download_queue: DownloadQueue):
         super().__init__(parent)
-        self.download_queue = download_queue
+        self.master = parent
+        self.queue = download_queue
 
         self.title("Queue Manager")
-        self.geometry("600x700")
-        self.resizable(False, False)
+        self.geometry("800x600")
+        self.resizable(True, True)
 
-        self.update_idletasks()
-        parent_x = parent.winfo_x()
-        parent_y = parent.winfo_y()
-        parent_width = parent.winfo_width()
-        parent_height = parent.winfo_height()
-
-        window_width = 600
-        window_height = 700
-
-        x = parent_x + (parent_width - window_width) // 2
-        y = parent_y + (parent_height - window_height) // 2
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-        title_label = ctk.CTkLabel(
+        header = ctk.CTkLabel(
             self,
-            text="📋 Queue Manager",
-            font=ctk.CTkFont(size=18, weight="bold")
+            text="📋 Download Queue Manager",
+            font=ctk.CTkFont(size=20, weight="bold")
         )
-        title_label.pack(pady=(15, 10))
+        header.pack(pady=15)
 
         self.queue_display = ctk.CTkScrollableFrame(
-            self,
-            width=550,
-            height=450,
-            fg_color="transparent"
+            self, width=740, height=450
         )
         self.queue_display.pack(pady=10, padx=20, fill="both", expand=True)
-
-        self.status_label = ctk.CTkLabel(
-            self,
-            text="",
-            font=ctk.CTkFont(size=12),
-            text_color="gray70"
-        )
-        self.status_label.pack(pady=5)
 
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
         button_frame.pack(pady=10)
 
-        self.start_all_btn = ctk.CTkButton(
-            button_frame,
-            text="▶️ Start All Queues",
-            width=150,
-            height=35,
-            command=lambda: self.start_all_queues(),
-            fg_color="#1f6aa5",
-            hover_color="#165a8e"
-        )
-        self.start_all_btn.pack(side="left", padx=5)
-
-        self.clear_btn = ctk.CTkButton(
-            button_frame,
-            text="🗑️ Clear All",
-            width=120,
-            height=35,
-            command=self.clear_all_queues,
-            fg_color="#d32f2f",
-            hover_color="#b71c1c"
-        )
-        self.clear_btn.pack(side="left", padx=5)
-
-        self.refresh_btn = ctk.CTkButton(
+        refresh_btn = ctk.CTkButton(
             button_frame,
             text="🔄 Refresh",
-            width=100,
-            height=35,
             command=self.refresh_queue_display,
-            fg_color="gray40",
-            hover_color="gray30"
+            width=120
         )
-        self.refresh_btn.pack(side="left", padx=5)
+        refresh_btn.pack(side="left", padx=5)
+
+        start_all_btn = ctk.CTkButton(
+            button_frame,
+            text="▶️ Download All",
+            command=self.start_all_downloads,
+            width=150,
+            fg_color="green",
+            hover_color="darkgreen"
+        )
+        start_all_btn.pack(side="left", padx=5)
+
+        clear_all_btn = ctk.CTkButton(
+            button_frame,
+            text="🗑️ Clear All",
+            command=self.clear_all_queues,
+            width=120,
+            fg_color="red",
+            hover_color="darkred"
+        )
+        clear_all_btn.pack(side="left", padx=5)
 
         self.refresh_queue_display()
 
@@ -93,197 +65,198 @@ class QueueWindow(ctk.CTkToplevel):
         for widget in self.queue_display.winfo_children():
             widget.destroy()
 
-        # MP4 Videos
-        self._create_section_header("🎬 MP4 Videos")
-        if self.download_queue.videos_queue:
-            for link, qualities in self.download_queue.videos_queue.items():
-                for quality in qualities:
-                    self._create_queue_item(
-                        f"  • {link[:50]}... ({quality}p)",
-                        lambda l=link, q=quality: self._remove_and_refresh(
-                            lambda: self._remove_video(l, q)
-                        )
-                    )
-        else:
-            self._create_empty_label()
+        has_items = False
 
-        self._create_separator()
+        if self.queue.videos_queue:
+            has_items = True
+            items = []
+            for link, qualities in self.queue.videos_queue.items():
+                for quality_tuple in qualities:
+                    quality = quality_tuple[0]
+                    items.append((link, quality))
+            self._create_queue_section("🎬 Videos (MP4)", items, "mp4")
 
-        # MP3 Audio
-        self._create_section_header("🎵 MP3 Audio")
-        if self.download_queue.mp3_queue:
-            for link in self.download_queue.mp3_queue:
-                self._create_queue_item(
-                    f"  • {link[:60]}...",
-                    lambda l=link: self._remove_and_refresh(
-                        lambda: self._remove_mp3(l)
-                    )
-                )
-        else:
-            self._create_empty_label()
+        if self.queue.mp3_queue:
+            has_items = True
+            items = [(item.link, None) for item in self.queue.mp3_queue]
+            self._create_queue_section("🎵 Audio (MP3)", items, "mp3")
 
-        self._create_separator()
+        if self.queue.wav_queue:
+            has_items = True
+            items = [(item.link, None) for item in self.queue.wav_queue]
+            self._create_queue_section("🎵 Audio (WAV)", items, "wav")
 
-        # WAV Audio
-        self._create_section_header("🎵 WAV Audio")
-        if self.download_queue.wav_queue:
-            for link in self.download_queue.wav_queue:
-                self._create_queue_item(
-                    f"  • {link[:60]}...",
-                    lambda l=link: self._remove_and_refresh(
-                        lambda: self._remove_wav(l)
-                    )
-                )
-        else:
-            self._create_empty_label()
+        if self.queue.thumbnail_queue:
+            has_items = True
+            items = [(item.link, None) for item in self.queue.thumbnail_queue]
+            self._create_queue_section("🖼️ Thumbnails (JPG)", items, "jpg")
 
-        self._create_separator()
+        if self.queue.tags_queue:
+            has_items = True
+            items = [(item.link, None) for item in self.queue.tags_queue]
+            self._create_queue_section("🏷️ Tags (CSV)", items, "csv")
 
-        # Thumbnails
-        self._create_section_header("🖼️ Thumbnails")
-        if self.download_queue.thumbnail_queue:
-            for link in self.download_queue.thumbnail_queue:
-                self._create_queue_item(
-                    f"  • {link[:60]}...",
-                    lambda l=link: self._remove_and_refresh(
-                        lambda: self._remove_thumbnail(l)
-                    )
-                )
-        else:
-            self._create_empty_label()
+        if not has_items:
+            empty_label = ctk.CTkLabel(
+                self.queue_display,
+                text="Queue is empty",
+                font=ctk.CTkFont(size=16),
+                text_color="gray"
+            )
+            empty_label.pack(pady=50)
 
-        self._create_separator()
+    def _create_queue_section(self, title: str, items, queue_type: str):
+        section_frame = ctk.CTkFrame(self.queue_display)
+        section_frame.pack(pady=10, padx=10, fill="x")
 
-        # Tags
-        self._create_section_header("🏷️ Tags")
-        if self.download_queue.tags_queue:
-            for link in self.download_queue.tags_queue:
-                self._create_queue_item(
-                    f"  • {link[:60]}...",
-                    lambda l=link: self._remove_and_refresh(
-                        lambda: self._remove_tags(l)
-                    )
-                )
-        else:
-            self._create_empty_label()
+        header_frame = ctk.CTkFrame(section_frame, fg_color="transparent")
+        header_frame.pack(fill="x", padx=10, pady=5)
 
-    def _create_section_header(self, text: str):
-        header = ctk.CTkLabel(
-            self.queue_display,
-            text=text,
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color="gray70"
+        title_label = ctk.CTkLabel(
+            header_frame,
+            text=title,
+            font=ctk.CTkFont(size=14, weight="bold")
         )
-        header.pack(pady=(5, 5), anchor="w")
+        title_label.pack(side="left")
 
-    def _create_empty_label(self):
-        empty_label = ctk.CTkLabel(
-            self.queue_display,
-            text="  📭 No items in queue",
-            text_color="gray50",
-            font=ctk.CTkFont(size=11, slant="italic")
-        )
-        empty_label.pack(pady=5, anchor="w")
+        if queue_type == "mp4":
+            for link, quality in items:
+                self._create_queue_item(
+                    section_frame,
+                    link,
+                    queue_type,
+                    quality=quality,
+                    extra_info=f"{quality}p"
+                )
+        else:
+            for link, _ in items:
+                self._create_queue_item(
+                    section_frame,
+                    link,
+                    queue_type
+                )
 
-    def _create_separator(self):
-        ctk.CTkFrame(
-            self.queue_display,
-            height=1,
-            fg_color="gray30"
-        ).pack(fill="x", pady=8)
+    def _create_queue_item(
+            self,
+            parent,
+            link: str,
+            queue_type: str,
+            quality: int = None,
+            extra_info: str = None
+    ):
+        item_frame = ctk.CTkFrame(parent)
+        item_frame.pack(pady=3, padx=10, fill="x")
 
-    def _create_queue_item(self, text: str, remove_callback):
-        item_frame = ctk.CTkFrame(self.queue_display, fg_color="transparent")
-        item_frame.pack(fill="x", pady=2)
+        link_text = link if len(link) <= 60 else link[:57] + "..."
+        if extra_info:
+            link_text = f"{link_text} [{extra_info}]"
 
-        label = ctk.CTkLabel(
+        link_label = ctk.CTkLabel(
             item_frame,
-            text=text,
-            font=ctk.CTkFont(size=11),
+            text=link_text,
             anchor="w"
         )
-        label.pack(side="left", fill="x", expand=True)
+        link_label.pack(side="left", padx=10, fill="x", expand=True)
 
         remove_btn = ctk.CTkButton(
             item_frame,
-            text="❌",
+            text="✕",
             width=30,
-            height=25,
-            command=remove_callback,
-            fg_color="transparent",
-            hover_color="#d32f2f"
+            command=lambda: self._remove_item(link, queue_type, quality),
+            fg_color="red",
+            hover_color="darkred"
         )
-        remove_btn.pack(side="right")
+        remove_btn.pack(side="right", padx=5)
 
-    def _remove_and_refresh(self, callback):
-        callback()
+    def _remove_item(self, link: str, queue_type: str, quality: int = None):
+        if queue_type == "mp4":
+            self.remove_video_item(link, quality)
+        elif queue_type in ["mp3", "wav"]:
+            self.remove_audio_item(link, queue_type)
+        else:
+            self.remove_other_item(link, queue_type)
+
+    def remove_video_item(self, link: str, quality: int) -> None:
+        if link in self.queue.videos_queue:
+            self.queue.videos_queue[link] = [
+                q for q in self.queue.videos_queue[link] if q[0] != quality
+            ]
+            if not self.queue.videos_queue[link]:
+                del self.queue.videos_queue[link]
         self.refresh_queue_display()
 
-    def _remove_video(self, link: str, quality: int):
-        if link in self.download_queue.videos_queue:
-            if quality in self.download_queue.videos_queue[link]:
-                self.download_queue.videos_queue[link].remove(quality)
-                if not self.download_queue.videos_queue[link]:
-                    del self.download_queue.videos_queue[link]
-
-    def _remove_mp3(self, link: str):
-        if link in self.download_queue.mp3_queue:
-            self.download_queue.mp3_queue.remove(link)
-
-    def _remove_wav(self, link: str):
-        if link in self.download_queue.wav_queue:
-            self.download_queue.wav_queue.remove(link)
-
-    def _remove_thumbnail(self, link: str):
-        if link in self.download_queue.thumbnail_queue:
-            self.download_queue.thumbnail_queue.remove(link)
-
-    def _remove_tags(self, link: str):
-        if link in self.download_queue.tags_queue:
-            self.download_queue.tags_queue.remove(link)
-
-    def start_all_queues(self):
-
-        queues_to_start = []
-
-        if self.download_queue.videos_queue:
-            queues_to_start.append("mp4")
-        if self.download_queue.mp3_queue:
-            queues_to_start.append("mp3")
-        if self.download_queue.wav_queue:
-            queues_to_start.append("wav")
-        if self.download_queue.thumbnail_queue:
-            queues_to_start.append("jpg")
-        if self.download_queue.tags_queue:
-            queues_to_start.append("csv")
-
-        if not queues_to_start:
-            self.status_label.configure(text="❌ All queues are empty")
-            return
-
-        self.status_label.configure(text=f"⏳ Starting {len(queues_to_start)} queue(s)...")
-        self.start_all_btn.configure(state="disabled")
-
-        async def run():
-            for queue_type in queues_to_start:
-                result = await self.download_queue.start_queue(queue_type)
-                print(f"{queue_type.upper()}: {result}")
-
-            self.status_label.configure(text="✅ All downloads completed!")
-            self.refresh_queue_display()
-            self.start_all_btn.configure(state="normal")
-
-        def execute():
-            asyncio.run(run())
-
-        thread = threading.Thread(target=execute, daemon=True)
-        thread.start()
-
-    def clear_all_queues(self):
-        self.download_queue.videos_queue = {}
-        self.download_queue.mp3_queue = []
-        self.download_queue.wav_queue = []
-        self.download_queue.thumbnail_queue = []
-        self.download_queue.tags_queue = []
+    def remove_audio_item(self, link: str, queue_type: str) -> None:
+        if queue_type == "mp3":
+            self.queue.mp3_queue = [
+                item for item in self.queue.mp3_queue if item.link != link
+            ]
+        elif queue_type == "wav":
+            self.queue.wav_queue = [
+                item for item in self.queue.wav_queue if item.link != link
+            ]
         self.refresh_queue_display()
-        self.status_label.configure(text="✅ All queues cleared")
+
+    def remove_other_item(self, link: str, queue_type: str) -> None:
+        if queue_type == "jpg":
+            self.queue.thumbnail_queue = [
+                item for item in self.queue.thumbnail_queue if item.link != link
+            ]
+        elif queue_type == "csv":
+            self.queue.tags_queue = [
+                item for item in self.queue.tags_queue if item.link != link
+            ]
+        self.refresh_queue_display()
+
+    def clear_all_queues(self) -> None:
+        self.queue.videos_queue.clear()
+        self.queue.mp3_queue.clear()
+        self.queue.wav_queue.clear()
+        self.queue.thumbnail_queue.clear()
+        self.queue.tags_queue.clear()
+
+        if hasattr(self.master, 'download_info'):
+            self.master.after(0, lambda: self.master.download_info.configure(text=""))
+
+        self.refresh_queue_display()
+
+    def start_all_downloads(self) -> None:
+        def async_download():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                tasks = []
+
+                if self.queue.videos_queue:
+                    tasks.append(loop.run_until_complete(self.queue.start_queue("mp4")))
+                if self.queue.mp3_queue:
+                    tasks.append(loop.run_until_complete(self.queue.start_queue("mp3")))
+                if self.queue.wav_queue:
+                    tasks.append(loop.run_until_complete(self.queue.start_queue("wav")))
+                if self.queue.thumbnail_queue:
+                    tasks.append(loop.run_until_complete(self.queue.start_queue("jpg")))
+                if self.queue.tags_queue:
+                    tasks.append(loop.run_until_complete(self.queue.start_queue("csv")))
+
+                if tasks:
+                    if hasattr(self.master, 'download_info'):
+                        self.master.after(
+                            0,
+                            lambda: self.master._show_temporary_message(
+                                "✅ All downloads finished", "", duration=2000
+                            )
+                        )
+                else:
+                    if hasattr(self.master, 'download_info'):
+                        self.master.after(
+                            0,
+                            lambda: self.master._show_temporary_message(
+                                "Queue is empty", "", duration=2000
+                            )
+                        )
+
+                self.after(200, self.refresh_queue_display)
+
+            finally:
+                loop.close()
+
+        threading.Thread(target=async_download, daemon=True).start()
