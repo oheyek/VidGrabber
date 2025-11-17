@@ -483,9 +483,16 @@ class AppUI(ctk.CTk):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
+                    self.after(0, lambda: self._set_all_buttons_state("disabled"))
+                    self.after(
+                        0, lambda: self.settings_button.configure(state="normal")
+                    )
+                    self.after(0, lambda: self.queue_button.configure(state="normal"))
+
                     result = loop.run_until_complete(
                         self.download_queue.add_thumbnail(link, self.current_title)
                     )
+
                     if "added to queue" in result.lower():
                         self.after(
                             0,
@@ -505,6 +512,8 @@ class AppUI(ctk.CTk):
                         self.after(
                             100, lambda: self.queue_window.refresh_queue_display()
                         )
+
+                    self.after(0, lambda: self._set_all_buttons_state("enabled"))
                 finally:
                     loop.close()
 
@@ -575,9 +584,16 @@ class AppUI(ctk.CTk):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
+                    self.after(0, lambda: self._set_all_buttons_state("disabled"))
+                    self.after(
+                        0, lambda: self.settings_button.configure(state="normal")
+                    )
+                    self.after(0, lambda: self.queue_button.configure(state="normal"))
+
                     result = loop.run_until_complete(
                         self.download_queue.add_mp3_audio(link, self.current_title)
                     )
+
                     if "added to queue" in result.lower():
                         self.after(
                             0,
@@ -597,6 +613,8 @@ class AppUI(ctk.CTk):
                         self.after(
                             100, lambda: self.queue_window.refresh_queue_display()
                         )
+
+                    self.after(0, lambda: self._set_all_buttons_state("enabled"))
                 finally:
                     loop.close()
 
@@ -667,20 +685,37 @@ class AppUI(ctk.CTk):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
+                    self.after(0, lambda: self._set_all_buttons_state("disabled"))
+                    self.after(
+                        0, lambda: self.settings_button.configure(state="normal")
+                    )
+                    self.after(0, lambda: self.queue_button.configure(state="normal"))
+
                     result = loop.run_until_complete(
                         self.download_queue.add_wav_audio(link, self.current_title)
                     )
+
                     if "added to queue" in result.lower():
-                        self.after(0, lambda: self._show_temporary_message(
-                            f"✅ {result}", "", duration=1500
-                        ))
+                        self.after(
+                            0,
+                            lambda: self._show_temporary_message(
+                                f"✅ {result}", "", duration=1500
+                            ),
+                        )
                     else:
-                        self.after(0, lambda: self._show_temporary_message(
-                            f"⚠️ {result}", "", duration=2000
-                        ))
+                        self.after(
+                            0,
+                            lambda: self._show_temporary_message(
+                                f"⚠️ {result}", "", duration=2000
+                            ),
+                        )
 
                     if self.queue_window and self.queue_window.winfo_exists():
-                        self.after(100, lambda: self.queue_window.refresh_queue_display())
+                        self.after(
+                            100, lambda: self.queue_window.refresh_queue_display()
+                        )
+
+                    self.after(0, lambda: self._set_all_buttons_state("enabled"))
                 finally:
                     loop.close()
 
@@ -751,9 +786,16 @@ class AppUI(ctk.CTk):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
+                    self.after(0, lambda: self._set_all_buttons_state("disabled"))
+                    self.after(
+                        0, lambda: self.settings_button.configure(state="normal")
+                    )
+                    self.after(0, lambda: self.queue_button.configure(state="normal"))
+
                     result = loop.run_until_complete(
                         self.download_queue.add_tags(link, self.current_title)
                     )
+
                     if "added to queue" in result.lower():
                         self.after(
                             0,
@@ -773,6 +815,8 @@ class AppUI(ctk.CTk):
                         self.after(
                             100, lambda: self.queue_window.refresh_queue_display()
                         )
+
+                    self.after(0, lambda: self._set_all_buttons_state("enabled"))
                 finally:
                     loop.close()
 
@@ -860,11 +904,18 @@ class AppUI(ctk.CTk):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 try:
+                    self.after(0, lambda: self._set_all_buttons_state("disabled"))
+                    self.after(
+                        0, lambda: self.settings_button.configure(state="normal")
+                    )
+                    self.after(0, lambda: self.queue_button.configure(state="normal"))
+
                     result = loop.run_until_complete(
                         self.download_queue.add_video(
                             link, quality_height, self.current_title
                         )
                     )
+
                     if "added to queue" in result.lower():
                         self.after(
                             0,
@@ -884,6 +935,8 @@ class AppUI(ctk.CTk):
                         self.after(
                             100, lambda: self.queue_window.refresh_queue_display()
                         )
+
+                    self.after(0, lambda: self._set_all_buttons_state("enabled"))
                 finally:
                     loop.close()
 

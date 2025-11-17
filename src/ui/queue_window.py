@@ -13,20 +13,29 @@ class QueueWindow(ctk.CTkToplevel):
         self.queue = download_queue
 
         self.title("Queue Manager")
-        self.geometry("800x600")
-        self.resizable(False, False)
+        self.geometry("800x750")
+        self.resizable(True, True)
 
         header = ctk.CTkLabel(
             self,
             text="📋 Download Queue Manager",
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=20, weight="bold"),
         )
         header.pack(pady=15)
 
-        self.queue_display = ctk.CTkScrollableFrame(
-            self, width=740, height=450
-        )
+        self.queue_display = ctk.CTkScrollableFrame(self, width=740, height=400)
         self.queue_display.pack(pady=10, padx=20, fill="both", expand=True)
+
+        self.download_status = ctk.CTkLabel(
+            self,
+            text="",
+            font=ctk.CTkFont(size=14),
+        )
+        self.download_status.pack(pady=(5, 5))
+
+        self.progress_bar = ctk.CTkProgressBar(self, width=600, mode="indeterminate")
+        self.progress_bar.pack(pady=5)
+        self.progress_bar.pack_forget()
 
         button_frame = ctk.CTkFrame(self, fg_color="transparent")
         button_frame.pack(pady=10)
@@ -35,31 +44,36 @@ class QueueWindow(ctk.CTkToplevel):
             button_frame,
             text="🔄 Refresh",
             command=self.refresh_queue_display,
-            width=120
+            width=120,
         )
         refresh_btn.pack(side="left", padx=5)
 
-        start_all_btn = ctk.CTkButton(
+        self.start_all_btn = ctk.CTkButton(
             button_frame,
             text="▶️ Download All",
             command=self.start_all_downloads,
             width=150,
             fg_color="green",
-            hover_color="darkgreen"
+            hover_color="darkgreen",
         )
-        start_all_btn.pack(side="left", padx=5)
+        self.start_all_btn.pack(side="left", padx=5)
 
-        clear_all_btn = ctk.CTkButton(
+        self.clear_all_btn = ctk.CTkButton(
             button_frame,
             text="🗑️ Clear All",
             command=self.clear_all_queues,
             width=120,
             fg_color="red",
-            hover_color="darkred"
+            hover_color="darkred",
         )
-        clear_all_btn.pack(side="left", padx=5)
+        self.clear_all_btn.pack(side="left", padx=5)
 
         self.refresh_queue_display()
+
+    def _set_download_buttons_state(self, state: str) -> None:
+        """Enable or disable download buttons in queue window"""
+        self.start_all_btn.configure(state=state)
+        self.clear_all_btn.configure(state=state)
 
     def refresh_queue_display(self):
         for widget in self.queue_display.winfo_children():
@@ -221,7 +235,49 @@ class QueueWindow(ctk.CTkToplevel):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
+                self.after(0, lambda: self._set_download_buttons_state("disabled"))
+                if hasattr(self.master, "_set_all_buttons_state"):
+                    self.master.after(
+                        0, lambda: self.master._set_all_buttons_state("disabled")
+                    )
+                    self.master.after(
+                        0, lambda: self.master.settings_button.configure(state="normal")
+                    )
+                    self.master.after(
+                        0, lambda: self.master.queue_button.configure(state="normal")
+                    )
+
+                self.after(0, lambda: self.progress_bar.pack(pady=5))
+                self.after(0, lambda: self.progress_bar.start())
+
                 tasks = []
+                total_items = (
+                    sum(len(q) for q in self.queue.videos_queue.values())
+                    + len(self.queue.mp3_queue)
+                    + len(self.queue.wav_queue)
+                    + len(self.queue.thumbnail_queue)
+                    + len(self.queue.tags_queue)
+                )
+
+                if total_items == 0:
+                    self.after(
+                        0, lambda: self.download_status.configure(text="Queue is empty")
+                    )
+                    self.after(0, lambda: self.progress_bar.stop())
+                    self.after(0, lambda: self.progress_bar.pack_forget())
+                    self.after(0, lambda: self._set_download_buttons_state("normal"))
+                    if hasattr(self.master, "_set_all_buttons_state"):
+                        self.master.after(
+                            0, lambda: self.master._set_all_buttons_state("enabled")
+                        )
+                    return
+
+                self.after(
+                    0,
+                    lambda: self.download_status.configure(
+                        text=f"⏳ Downloading {total_items} item(s)..."
+                    ),
+                )
 
                 if self.queue.videos_queue:
                     tasks.append(loop.run_until_complete(self.queue.start_queue("mp4")))
@@ -234,24 +290,24 @@ class QueueWindow(ctk.CTkToplevel):
                 if self.queue.tags_queue:
                     tasks.append(loop.run_until_complete(self.queue.start_queue("csv")))
 
-                if tasks:
-                    if hasattr(self.master, 'download_info'):
-                        self.master.after(
-                            0,
-                            lambda: self.master._show_temporary_message(
-                                "✅ All downloads finished", "", duration=2000
-                            )
-                        )
-                else:
-                    if hasattr(self.master, 'download_info'):
-                        self.master.after(
-                            0,
-                            lambda: self.master._show_temporary_message(
-                                "Queue is empty", "", duration=2000
-                            )
-                        )
+                self.after(0, lambda: self.progress_bar.stop())
+                self.after(0, lambda: self.progress_bar.pack_forget())
+
+                self.after(
+                    0,
+                    lambda: self.download_status.configure(
+                        text=f"✅ All {total_items} downloads finished"
+                    ),
+                )
+                self.after(2000, lambda: self.download_status.configure(text=""))
 
                 self.after(200, self.refresh_queue_display)
+
+                self.after(0, lambda: self._set_download_buttons_state("normal"))
+                if hasattr(self.master, "_set_all_buttons_state"):
+                    self.master.after(
+                        0, lambda: self.master._set_all_buttons_state("enabled")
+                    )
 
             finally:
                 loop.close()
