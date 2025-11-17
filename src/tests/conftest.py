@@ -2,7 +2,9 @@ import asyncio
 from typing import Any
 
 import pytest
+
 from src.updater import initialize_binaries
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_binaries() -> Any:

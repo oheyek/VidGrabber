@@ -1,15 +1,18 @@
 import asyncio
 from pathlib import Path
 
-from .path_manager import PathManager
 from .logger import log_call
+from .path_manager import PathManager
 from .updater import get_yt_dlp_path, get_ffmpeg_path
 from .video_info import VideoInfo
+
 
 class ThumbnailDownloader:
     def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
-        Constructor for a thumbnail downloader class.
+        Initialize ThumbnailDownloader with video info and path manager instances.
+        :param video_info: VideoInfo instance for link validation and cleaning.
+        :param path_manager: PathManager instance for handling download paths, creates new if None.
         """
         self.video_info = video_info
         self.path_manager = path_manager if path_manager else PathManager()
@@ -19,9 +22,9 @@ class ThumbnailDownloader:
     @log_call
     async def download_thumbnail(self, link: str) -> str:
         """
-        Method to download a thumbnail from a YouTube video link.
-        :param link: YouTube video link.
-        :return: Success or failure message.
+        Download thumbnail image from YouTube video and convert to JPG format.
+        :param link: YouTube video link from which to download thumbnail.
+        :return: Success message if download completed or error message if download failed.
         """
         link = self.video_info.clean_youtube_url(link)
         if not self.video_info.validator(link) or not link:
@@ -31,18 +34,16 @@ class ThumbnailDownloader:
         output_template: str = str(output_path / "%(title)s.%(ext)s")
 
         try:
-            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-                str(self.yt_dlp_path),
-                "--skip-download",
-                "--write-thumbnail",
-                "--convert-thumbnails", "jpg",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
-                "--output", output_template,
-                "--no-warnings",
-                link,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
+                                                                                       "--skip-download",
+                                                                                       "--write-thumbnail",
+                                                                                       "--convert-thumbnails", "jpg",
+                                                                                       "--ffmpeg-location",
+                                                                                       str(self.ffmpeg_path.parent),
+                                                                                       "--output", output_template,
+                                                                                       "--no-warnings", link,
+                                                                                       stdout=asyncio.subprocess.PIPE,
+                                                                                       stderr=asyncio.subprocess.PIPE)
 
             stdout, stderr = await process.communicate()
 

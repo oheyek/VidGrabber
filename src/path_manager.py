@@ -7,7 +7,12 @@ class PathManager:
     DEFAULT_EXTENSIONS = ["mp4", "mp3", "wav", "jpg", "tags"]
 
     def __init__(self) -> None:
-        """Constructor of a PathManager class."""
+        """
+        Initialize PathManager with settings directory and file.
+
+        Creates settings directory if it doesn't exist and ensures
+        settings file is properly initialized.
+        """
         self.settings_dir = Path.home() / "Documents" / "VidGrabber"
         self.settings_file = self.settings_dir / "settings.json"
         self._ensure_settings_file()
@@ -81,10 +86,8 @@ class PathManager:
         try:
             self.paths[ext].mkdir(parents=True, exist_ok=True)
         except (PermissionError, OSError) as e:
-            raise RuntimeError(
-                f"Cannot create directory '{self.paths[ext]}': {str(e)}. "
-                f"Please check permissions or choose a different location."
-            )
+            raise RuntimeError(f"Cannot create directory '{self.paths[ext]}': {str(e)}. "
+                               f"Please check permissions or choose a different location.")
 
         return self.paths[ext]
 

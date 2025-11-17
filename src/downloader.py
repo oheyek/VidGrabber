@@ -2,8 +2,8 @@ import asyncio
 import sys
 from pathlib import Path
 
-from .path_manager import PathManager
 from .logger import log_call
+from .path_manager import PathManager
 from .updater import get_ffmpeg_path, get_yt_dlp_path
 from .video_info import VideoInfo
 
@@ -11,7 +11,11 @@ from .video_info import VideoInfo
 class Downloader:
     def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
-        Constructor of a downloader class.
+        Initialize Downloader with video info and path management.
+
+        :param video_info: VideoInfo instance for validating and processing video URLs.
+        :param path_manager: Optional PathManager instance for managing download paths.
+                             If None, creates a new PathManager instance.
         """
         self.video_info = video_info
         self.path_manager = path_manager if path_manager else PathManager()
@@ -21,24 +25,18 @@ class Downloader:
     @log_call
     async def download_video(self, link: str, quality: int) -> str:
         """
-        Method to download a YouTube video in a desired quality.
-        :param link: The link to the video.
-        :param quality: The quality user want to download.
-        :return: Success message.
+        Download YouTube video in specified quality.
+
+        Supports qualities: 144p, 240p, 360p, 480p, 720p, 1080p, 1440p, 2160p.
+
+        :param link: YouTube video URL (cleaned automatically).
+        :param quality: Desired video quality in pixels (e.g., 720, 1080).
+        :return: Success message if download completed, error message otherwise.
         """
         if not isinstance(quality, int):
             return "Incorrect video quality."
 
-        allowed_qualities: list[int] = [
-            144,
-            240,
-            360,
-            480,
-            720,
-            1080,
-            1440,
-            2160,
-        ]
+        allowed_qualities: list[int] = [144, 240, 360, 480, 720, 1080, 1440, 2160, ]
 
         if quality not in allowed_qualities:
             return "Incorrect video quality."
@@ -48,28 +46,20 @@ class Downloader:
             return "Invalid link provided."
 
         download_path: Path = self.path_manager.get_download_path("mp4")
-        output_template: str = str(
-            Path(download_path) / f"%(title)s_{quality}p.%(ext)s"
-        )
+        output_template: str = str(Path(download_path) / f"%(title)s_{quality}p.%(ext)s")
 
         try:
-            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-                str(self.yt_dlp_path),
-                "--format",
-                f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
-                "--merge-output-format",
-                "mp4",
-                "--ffmpeg-location",
-                str(self.ffmpeg_path.parent),
-                "--output",
-                output_template,
-                "--no-warnings",
-                "--newline",
-                "--quiet",
-                link,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
+                                                                                       "--format",
+                                                                                       f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
+                                                                                       "--merge-output-format",
+                                                                                       "mp4", "--ffmpeg-location",
+                                                                                       str(self.ffmpeg_path.parent),
+                                                                                       "--output", output_template,
+                                                                                       "--no-warnings",
+                                                                                       "--newline", "--quiet", link,
+                                                                                       stdout=asyncio.subprocess.PIPE,
+                                                                                       stderr=asyncio.subprocess.PIPE, )
 
             while True:
                 line = await process.stdout.readline()
@@ -95,10 +85,14 @@ class Downloader:
     @log_call
     async def download_audio(self, link: str, audio_format: str) -> str:
         """
-        Method to download audio from a YouTube video in a desired format (MP3/WAV).
-        :param link: The link to the video.
-        :param audio_format: The format of the output file user want.
-        :return: Success message.
+        Extract and download audio from YouTube video.
+
+        Supported formats: MP3, WAV (case-insensitive).
+        Audio quality is set to 192K bitrate.
+
+        :param link: YouTube video URL (cleaned automatically).
+        :param audio_format: Desired audio format ("mp3" or "wav", case-insensitive).
+        :return: Success message if download completed, error message otherwise.
         """
         allowed_formats: list[str] = ["MP3", "WAV"]
         audio_format_upper = str(audio_format).strip().upper()
@@ -115,26 +109,19 @@ class Downloader:
         output_template: str = str(Path(download_path) / "%(title)s.%(ext)s")
 
         try:
-            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-                str(self.yt_dlp_path),
-                "--format",
-                "bestaudio/best",
-                "--extract-audio",
-                "--audio-format",
-                audio_format_lower,
-                "--audio-quality",
-                "192K",
-                "--ffmpeg-location",
-                str(self.ffmpeg_path.parent),
-                "--output",
-                output_template,
-                "--no-warnings",
-                "--newline",
-                "--quiet",
-                link,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
+                                                                                       "--format", "bestaudio/best",
+                                                                                       "--extract-audio",
+                                                                                       "--audio-format",
+                                                                                       audio_format_lower,
+                                                                                       "--audio-quality", "192K",
+                                                                                       "--ffmpeg-location",
+                                                                                       str(self.ffmpeg_path.parent),
+                                                                                       "--output",
+                                                                                       output_template, "--no-warnings",
+                                                                                       "--newline", "--quiet", link,
+                                                                                       stdout=asyncio.subprocess.PIPE,
+                                                                                       stderr=asyncio.subprocess.PIPE, )
 
             while True:
                 line = await process.stdout.readline()

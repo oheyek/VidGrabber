@@ -11,21 +11,16 @@ def video_info() -> VideoInfo:
     """
     return VideoInfo()
 
-VALID_YOUTUBE_URLS = [
-    "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
-    "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-    "http://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
-    "www.youtube.com/watch?v=dQw4w9WgXcQ",
-]
 
-INVALID_YOUTUBE_URLS = [
-    "https://www.google.com/",
-    "http://www.google.com/",
-    "https://vimeo.com/123456",
-    "ftp://youtube.com/watch?v=test",
-]
+VALID_YOUTUBE_URLS = ["https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
+                      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
+                      "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
+                      "http://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
+                      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
+                      "www.youtube.com/watch?v=dQw4w9WgXcQ", ]
+
+INVALID_YOUTUBE_URLS = ["https://www.google.com/", "http://www.google.com/", "https://vimeo.com/123456",
+                        "ftp://youtube.com/watch?v=test", ]
 
 
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
@@ -54,10 +49,7 @@ def test_empty_string(video_info) -> None:
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
 def test_clean_valid_urls(url: str, video_info: VideoInfo) -> None:
     """Test for cleaning valid YouTube URLs."""
-    assert (
-        video_info.clean_youtube_url(url)
-        == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    )
+    assert (video_info.clean_youtube_url(url) == "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
 
 @pytest.mark.parametrize("url", INVALID_YOUTUBE_URLS)
@@ -85,10 +77,7 @@ async def test_get_info_valid_urls(url: str, video_info: VideoInfo) -> None:
 
     assert isinstance(result, list)
 
-    assert (
-        result[0]
-        == "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)"
-    )
+    assert (result[0] == "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)")
     assert result[1] == "Rick Astley"
     assert "Never Gonna Give You Up" in result[2]
     assert result[3] == "3:33"
@@ -126,7 +115,6 @@ async def test_video_unavailable(video_info: VideoInfo) -> None:
     link = "https://youtu.be/test123"
     result = await video_info.get_video_info(link)
     assert result.startswith("Error extracting info:") or result.startswith("Download error")
-
 
 
 @pytest.mark.asyncio
