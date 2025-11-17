@@ -1,8 +1,9 @@
-import functools
 import asyncio
+import functools
 import logging
 from pathlib import Path
 from typing import Any, Coroutine
+
 from .path_manager import PathManager
 
 path_manager: PathManager = PathManager()
@@ -25,6 +26,7 @@ def log_call(func):
     :param func: A function to get logs from.
     :return: Wrapped function
     """
+
     @functools.wraps(func)
     def wrapper(*args: object, **kwargs: object) -> Coroutine[Any, Any, Any] | Any:
         try:
@@ -47,6 +49,7 @@ def log_call(func):
                     except Exception:
                         logger.exception(f"{func_name} | args: {args_str} | exception")
                         raise
+
                 return async_handler()
 
             logger.info(f"{func_name} | args: {args_str} | result: {result!r}")

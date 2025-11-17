@@ -5,8 +5,8 @@ from typing import Any, LiteralString
 
 import pyperclip
 
-from .path_manager import PathManager
 from .logger import log_call
+from .path_manager import PathManager
 from .updater import get_ffmpeg_path, get_yt_dlp_path
 from .video_info import VideoInfo
 
@@ -14,8 +14,8 @@ from .video_info import VideoInfo
 def sanitize_filename(filename: str) -> str:
     """
     Remove or replace characters that are invalid in file names.
-    :param filename: Original filename
-    :return: Sanitized filename
+    :param filename: Original filename to be sanitized.
+    :return: Sanitized filename safe for file system operations.
     """
     # Characters forbidden in Windows filenames
     invalid_chars = '<>:"/\\|?*'
@@ -43,11 +43,12 @@ def sanitize_filename(filename: str) -> str:
 
 def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool, path_manager: PathManager) -> str:
     """
-    Function to save tags to a csv file and copy them to a clipboard.
-    :param copy: Bool value whether the tags have to be copied to clipboard.
+    Save tags to a CSV file and optionally copy them to clipboard.
     :param tags: The list of tags downloaded from YouTube video.
     :param title: The title of the video.
-    :param path_manager: The path manager instance for extracting path.
+    :param copy: Bool value whether the tags have to be copied to clipboard.
+    :param path_manager: The path manager instance for extracting download path.
+    :return: Status message indicating success or failure of the operation.
     """
     output_path: Path = path_manager.get_download_path("tags")
     output_path.mkdir(parents=True, exist_ok=True)
@@ -56,9 +57,7 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool, pat
     tags_text: str = "".join(f"{tag},\n" for tag in tags)
 
     try:
-        with open(
-            output_path / f"{safe_title}_tags.csv", "w", newline="", encoding="utf-8"
-        ) as f:
+        with open(output_path / f"{safe_title}_tags.csv", "w", newline="", encoding="utf-8") as f:
             f.write(tags_text)
     except OSError as e:
         return f"Failed to save tags: {str(e)}"
@@ -75,7 +74,9 @@ def save_tags_and_copy_to_clipboard(tags: list[str], title: str, copy: bool, pat
 class TagExtractor:
     def __init__(self, video_info: VideoInfo, path_manager: PathManager = None) -> None:
         """
-        Constructor for a tag extractor class.
+        Initialize TagExtractor with video info and path manager instances.
+        :param video_info: VideoInfo instance for link validation and cleaning.
+        :param path_manager: PathManager instance for handling download paths, creates new if None.
         """
         self.video_info = video_info
         self.path_manager = path_manager if path_manager else PathManager()
@@ -85,26 +86,24 @@ class TagExtractor:
     @log_call
     async def extract_tags(self, link: str, copy: bool = True) -> str:
         """
-        Method to extract tags list from a YouTube video link.
-        :param link: The YouTube video.
+        Extract tags list from a YouTube video link and save to file.
+        :param link: The YouTube video link from which to extract tags.
         :param copy: Bool value whether the tags have to be copied to clipboard.
-        :return: Success message.
+        :return: Success message if extraction completed or error message if extraction failed.
         """
         link = self.video_info.clean_youtube_url(link)
         if not self.video_info.validator(link) or not link:
             return "Invalid link provided."
 
         try:
-            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-                str(self.yt_dlp_path),
-                "--dump-json",
-                "--no-warnings",
-                "--skip-download",
-                "--ffmpeg-location", str(self.ffmpeg_path.parent),
-                link,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
+                                                                                       "--dump-json", "--no-warnings",
+                                                                                       "--skip-download",
+                                                                                       "--ffmpeg-location",
+                                                                                       str(self.ffmpeg_path.parent),
+                                                                                       link,
+                                                                                       stdout=asyncio.subprocess.PIPE,
+                                                                                       stderr=asyncio.subprocess.PIPE)
 
             stdout, stderr = await process.communicate()
 

@@ -17,7 +17,10 @@ class QueueItem:
 class DownloadQueue:
     def __init__(self) -> None:
         """
-        Constructor of a download queue class.
+        Initialize DownloadQueue with empty queues and download services.
+        Sets up separate queues for videos (MP4), audio (MP3/WAV),
+        thumbnails (JPG), and tags (CSV). Initializes downloader instances
+        for each type. Default concurrent download limit is 5.
         """
         self.max_downloads: int = 5
         self.videos_queue: dict[str, list[tuple[int, str]]] = {}  # {link: [(quality, title)]}
@@ -33,11 +36,14 @@ class DownloadQueue:
     @log_call
     async def add_video(self, link: str, quality: int, title: str) -> str:
         """
-        Method to add videos to queue list.
-        :param link: The video link.
-        :param quality: Desired video quality.
-        :param title: Video title.
-        :return: Information whether the video has been added to queue or the queue limit has been reached.
+        Add video to download queue with specified quality.
+        Prevents duplicate link-quality combinations. Multiple qualities
+        for the same link are allowed. Queue limit: 5 videos total.
+        :param link: YouTube video URL.
+        :param quality: Video quality in pixels (144, 240, 360, 480, 720, 1080, 1440, 2160).
+        :param title: Video title for display purposes.
+        :return: "Video added to queue.", "Video with this quality already in queue.",
+                 "Queue limit reached.", or error message.
         """
         valid_qualities: list[int] = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 
@@ -64,10 +70,12 @@ class DownloadQueue:
     @log_call
     async def add_mp3_audio(self, link: str, title: str) -> str:
         """
-        Method to add mp3 audio to queue list.
-        :param link: The video link.
-        :param title: Video title.
-        :return: Information whether the audio has been added to queue or the queue limit has been reached.
+        Add MP3 audio to download queue.
+        Prevents duplicate links. Queue limit: 5 audio files.
+        :param link: YouTube video URL.
+        :param title: Video title for display purposes.
+        :return: "Audio added to queue.", "Audio already in queue.",
+                 "Queue limit reached.", or error message.
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
@@ -81,10 +89,12 @@ class DownloadQueue:
     @log_call
     async def add_wav_audio(self, link: str, title: str) -> str:
         """
-        Method to add wav audio to queue list.
-        :param link: The video link.
-        :param title: Video title.
-        :return: Information whether the audio has been added to queue or the queue limit has been reached.
+        Add WAV audio to download queue.
+        Prevents duplicate links. Queue limit: 5 audio files.
+        :param link: YouTube video URL.
+        :param title: Video title for display purposes.
+        :return: "Audio added to queue.", "Audio already in queue.",
+                 "Queue limit reached.", or error message.
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
@@ -98,10 +108,13 @@ class DownloadQueue:
     @log_call
     async def add_thumbnail(self, link: str, title: str) -> str:
         """
-        Method to add thumbnails to a queue list.
-        :param link: The video link.
-        :param title: Video title.
-        :return: Information whether the thumbnail has been added to queue or the queue limit has been reached.
+        Add thumbnail to download queue.
+        Prevents duplicate links. Queue limit: 5 thumbnails.
+        Downloads highest quality thumbnail available from YouTube.
+        :param link: YouTube video URL.
+        :param title: Video title for display purposes.
+        :return: "Thumbnail added to queue", "Thumbnail already in queue.",
+                 "Queue limit reached.", or error message.
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
@@ -115,10 +128,13 @@ class DownloadQueue:
     @log_call
     async def add_tags(self, link: str, title: str) -> str:
         """
-        Method to add tags to a queue list.
-        :param link: The tags link.
-        :param title: Video title.
-        :return: Information whether the tags have been added to queue or the queue limit has been reached.
+        Add video tags extraction to queue.
+        Prevents duplicate links. Queue limit: 5 tag extractions.
+        Tags will be saved to CSV file.
+        :param link: YouTube video URL.
+        :param title: Video title for display purposes.
+        :return: "Tags added to queue", "Tags already in queue.",
+                 "Queue limit reached.", or error message.
         """
         if not isinstance(link, str) or not link:
             return "Invalid link provided."
@@ -132,9 +148,12 @@ class DownloadQueue:
     @log_call
     async def start_queue(self, queue_type: str) -> str:
         """
-        Asynchronous method to start queue with a desired queue type.
-        :param queue_type: Type of the files we want to download (MP4, MP3, WAV, JPG or TAGS)
-        :return: Success or failure message.
+        Start downloading all items from specified queue type.
+        Downloads run concurrently with max 5 simultaneous downloads.
+        Queue is cleared after completion (regardless of success/failure).
+        :param queue_type: Queue identifier - "mp4", "mp3", "wav", "jpg", or "csv".
+        :return: Success message ("All X downloads have been finished."),
+                 "Nothing to download, queue is empty.", or "Invalid queue type.".
         """
         sem: asyncio.Semaphore = asyncio.Semaphore(self.max_downloads)
 
@@ -150,10 +169,7 @@ class DownloadQueue:
                 for quality_tuple in qualities:
                     quality = quality_tuple[0]
                     tasks.append(
-                        asyncio.create_task(
-                            _run_with_semaphore(self.downloader.download_video(link, quality))
-                        )
-                    )
+                        asyncio.create_task(_run_with_semaphore(self.downloader.download_video(link, quality))))
             results = await asyncio.gather(*tasks, return_exceptions=True)
             self.videos_queue = {}
             return "All video downloads have been finished."
@@ -161,12 +177,8 @@ class DownloadQueue:
         elif queue_type == "mp3":
             if not self.mp3_queue:
                 return "Nothing to download, queue is empty."
-            tasks = [
-                asyncio.create_task(
-                    _run_with_semaphore(self.downloader.download_audio(item.link, "mp3"))
-                )
-                for item in self.mp3_queue
-            ]
+            tasks = [asyncio.create_task(_run_with_semaphore(self.downloader.download_audio(item.link, "mp3"))) for item
+                     in self.mp3_queue]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             self.mp3_queue = []
             return "All audio downloads have been finished."
@@ -174,12 +186,8 @@ class DownloadQueue:
         elif queue_type == "wav":
             if not self.wav_queue:
                 return "Nothing to download, queue is empty."
-            tasks = [
-                asyncio.create_task(
-                    _run_with_semaphore(self.downloader.download_audio(item.link, "wav"))
-                )
-                for item in self.wav_queue
-            ]
+            tasks = [asyncio.create_task(_run_with_semaphore(self.downloader.download_audio(item.link, "wav"))) for item
+                     in self.wav_queue]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             self.wav_queue = []
             return "All audio downloads have been finished."
@@ -187,12 +195,8 @@ class DownloadQueue:
         elif queue_type == "jpg":
             if not self.thumbnail_queue:
                 return "Nothing to download, queue is empty."
-            tasks = [
-                asyncio.create_task(
-                    _run_with_semaphore(self.thumbnail_downloader.download_thumbnail(item.link))
-                )
-                for item in self.thumbnail_queue
-            ]
+            tasks = [asyncio.create_task(_run_with_semaphore(self.thumbnail_downloader.download_thumbnail(item.link)))
+                     for item in self.thumbnail_queue]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             self.thumbnail_queue = []
             return "All thumbnail downloads have been finished."
@@ -200,12 +204,8 @@ class DownloadQueue:
         elif queue_type == "csv":
             if not self.tags_queue:
                 return "Nothing to download, queue is empty."
-            tasks = [
-                asyncio.create_task(
-                    _run_with_semaphore(self.tag_extractor.extract_tags(item.link, False))
-                )
-                for item in self.tags_queue
-            ]
+            tasks = [asyncio.create_task(_run_with_semaphore(self.tag_extractor.extract_tags(item.link, False))) for
+                     item in self.tags_queue]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             self.tags_queue = []
             return "All tag extractions have been finished."

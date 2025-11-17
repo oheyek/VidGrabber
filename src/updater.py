@@ -50,7 +50,11 @@ def get_ffmpeg_path() -> Path:
     return binaries_dir / "ffmpeg"
 
 
-def ensure_executable(file_path: Path):
+def ensure_executable(file_path: Path) -> None:
+    """
+    Function to set permissions for the executable files. (MacOS/Linux)
+    :param file_path: Path to the executable.
+    """
     if platform.system().lower() != "windows":
         try:
             os.chmod(file_path, 0o755)
@@ -64,11 +68,7 @@ def is_internet_available(timeout: float = 10.0) -> bool:
     """
     import urllib.request
 
-    urls: list[str] = [
-        "https://www.google.com",
-        "https://www.cloudflare.com",
-        "https://1.1.1.1",
-    ]
+    urls: list[str] = ["https://www.google.com", "https://www.cloudflare.com", "https://1.1.1.1", ]
 
     for url in urls:
         try:
@@ -107,12 +107,9 @@ async def check_yt_dlp_version() -> str:
         yt_dlp_path: Path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
 
-        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-            str(yt_dlp_path),
-            "--version",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(yt_dlp_path), "--version",
+                                                                                   stdout=asyncio.subprocess.PIPE,
+                                                                                   stderr=asyncio.subprocess.PIPE, )
         stdout, _ = await process.communicate()
 
         version: str = stdout.decode().strip()
@@ -133,12 +130,9 @@ async def update_yt_dlp() -> bool:
         ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
 
-        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-            str(yt_dlp_path),
-            "-U",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(yt_dlp_path), "-U",
+                                                                                   stdout=asyncio.subprocess.PIPE,
+                                                                                   stderr=asyncio.subprocess.PIPE, )
         stdout, _ = await process.communicate()
 
         output: str = stdout.decode()
@@ -161,12 +155,8 @@ async def verify_ffmpeg() -> bool:
         ffmpeg_path: Path = get_ffmpeg_path()
         ensure_executable(ffmpeg_path)
 
-        process = await asyncio.create_subprocess_exec(
-            str(ffmpeg_path),
-            "-version",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        process = await asyncio.create_subprocess_exec(str(ffmpeg_path), "-version", stdout=asyncio.subprocess.PIPE,
+                                                       stderr=asyncio.subprocess.PIPE, )
         await process.communicate()
 
         print("ffmpeg is available.")
@@ -205,4 +195,3 @@ async def initialize_binaries() -> None:
     # Proceed with async verification and updates
     await asyncio.gather(check_yt_dlp_version(), verify_ffmpeg())
     await update_yt_dlp()
-

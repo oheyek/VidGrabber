@@ -3,6 +3,7 @@ import pytest
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.video_info import VideoInfo
 
+
 @pytest.fixture
 def thumbnail_downloader() -> ThumbnailDownloader:
     """
@@ -11,21 +12,17 @@ def thumbnail_downloader() -> ThumbnailDownloader:
     """
     return ThumbnailDownloader(VideoInfo())
 
-VALID_YOUTUBE_URLS = [
-    "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
-    "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-    "http://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
-    "www.youtube.com/watch?v=dQw4w9WgXcQ",
-]
 
-INVALID_YOUTUBE_URLS = [
-    "https://www.google.com/",
-    "http://www.google.com/",
-    "https://vimeo.com/123456",
-    "ftp://youtube.com/watch?v=test",
-]
+VALID_YOUTUBE_URLS = ["https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
+                      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
+                      "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
+                      "http://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
+                      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1",
+                      "www.youtube.com/watch?v=dQw4w9WgXcQ", ]
+
+INVALID_YOUTUBE_URLS = ["https://www.google.com/", "http://www.google.com/", "https://vimeo.com/123456",
+                        "ftp://youtube.com/watch?v=test", ]
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("url", VALID_YOUTUBE_URLS)
@@ -42,12 +39,14 @@ async def test_download_thumbnail_invalid_links(url: str, thumbnail_downloader: 
     result = await thumbnail_downloader.download_thumbnail(url)
     assert result == "Invalid link provided."
 
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("invalid_input", [None, 123, 12.34])
 async def test_download_thumbnail_invalid_input_types(invalid_input, thumbnail_downloader: ThumbnailDownloader) -> None:
     """Test for downloading thumbnails with invalid YouTube URLs."""
     result = await thumbnail_downloader.download_thumbnail(invalid_input)
     assert result == "Invalid link provided."
+
 
 @pytest.mark.asyncio
 async def test_download_thumbnail_empty_url(thumbnail_downloader: ThumbnailDownloader) -> None:

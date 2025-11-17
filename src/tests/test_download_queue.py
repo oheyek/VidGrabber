@@ -13,17 +13,12 @@ def test_queue() -> DownloadQueue:
     """
     return DownloadQueue()
 
-VALID_YOUTUBE_URLS = [
-    "https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
-    "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
-]
 
-INVALID_YOUTUBE_URLS = [
-    "https://example.com/video",
-    "not a url",
-    "ftp://youtu.be/invalid",
-]
+VALID_YOUTUBE_URLS = ["https://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb",
+                      "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ",
+                      "http://youtu.be/dQw4w9WgXcQ?si=52ngrNGc_WNyEkUb", ]
+
+INVALID_YOUTUBE_URLS = ["https://example.com/video", "not a url", "ftp://youtu.be/invalid", ]
 
 
 # Tests for add_video

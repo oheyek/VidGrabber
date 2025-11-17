@@ -14,7 +14,7 @@ class VideoInfo:
 
     def __init__(self) -> None:
         """
-        Constructor of a VideoInfo class.
+        Initialize VideoInfo instance and set paths to yt-dlp and ffmpeg executables.
         """
         self.yt_dlp_path = get_yt_dlp_path()
         self.ffmpeg_path = get_ffmpeg_path()
@@ -23,7 +23,7 @@ class VideoInfo:
     @lru_cache(maxsize=128)
     def validator(link: str) -> bool:
         """
-        Method to validate YouTube link format.
+        Validate if provided string is a valid YouTube link format.
         :param link: The link provided by user.
         :return: Whether the link is a valid YouTube link or not.
         """
@@ -34,21 +34,16 @@ class VideoInfo:
             if not link.startswith(("http://", "https://")):
                 link = "https://" + link
             return link.startswith(
-                (
-                    "https://www.youtube.com/watch?v=",
-                    "https://youtu.be/",
-                    "http://www.youtube.com/watch?v=",
-                    "http://youtu.be/",
-                )
-            )
+                ("https://www.youtube.com/watch?v=", "https://youtu.be/", "http://www.youtube.com/watch?v=",
+                 "http://youtu.be/",))
         except AttributeError:
             return False
 
     def clean_youtube_url(self, url: str) -> Optional[str]:
         """
-        Extract video ID and return clean YouTube URL
-        :param url: The link to clean up.
-        :return: Cleaned link.
+        Extract video ID from YouTube URL and return standardized clean URL.
+        :param url: The YouTube link to clean up and standardize.
+        :return: Cleaned YouTube link in standard format or None if invalid.
         """
         if not self.validator(url):
             return None
@@ -73,36 +68,31 @@ class VideoInfo:
 
     async def get_video_info(self, link: str) -> Union[str, List[str]]:
         """
-        Method to get YouTube video info from a given link.
-        :param link: The link provided by user.
-        :return: The video information as a list or invalid YouTube link information.
+        Fetch YouTube video information including title, uploader, duration and available qualities.
+        :param link: The YouTube link provided by user.
+        :return: List containing video information or error message string if extraction fails.
         """
         link = self.clean_youtube_url(link)
         if not self.validator(link) or not link:
             return "Invalid link provided."
 
         try:
-            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(
-                str(self.yt_dlp_path),
-                "--dump-json",
-                "--no-warnings",
-                "--no-playlist",
-                "--skip-download",
-                "--ffmpeg-location",
-                str(self.ffmpeg_path.parent),
-                link,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
+                                                                                       "--dump-json", "--no-warnings",
+                                                                                       "--no-playlist",
+                                                                                       "--skip-download",
+                                                                                       "--ffmpeg-location",
+                                                                                       str(self.ffmpeg_path.parent),
+                                                                                       link,
+                                                                                       stdout=asyncio.subprocess.PIPE,
+                                                                                       stderr=asyncio.subprocess.PIPE, )
 
             stdout, stderr = await process.communicate()
 
             if process.returncode != 0:
                 error_msg = stderr.decode("utf-8", errors="replace").strip()
                 if "Private video" in error_msg or "unavailable" in error_msg.lower():
-                    return (
-                        f"Download error (video may be unavailable or private): {link}"
-                    )
+                    return (f"Download error (video may be unavailable or private): {link}")
                 return f"Error extracting info: {error_msg}"
 
             info = json.loads(stdout.decode("utf-8", errors="replace"))
@@ -122,21 +112,14 @@ class VideoInfo:
                     if height and fps and ext == "mp4":
                         qualities.add(f"mp4 {height}p {int(fps)}fps")
 
-            qualities_list: list[str] = sorted(
-                list(qualities), key=lambda x: int(x.split()[1].rstrip("p"))
-            )
+            qualities_list: list[str] = sorted(list(qualities), key=lambda x: int(x.split()[1].rstrip("p")))
 
             seconds: int = info.get("duration", 0)
             minutes: int = seconds // 60
             remaining: int = seconds % 60
 
-            video_info: list[str] = [
-                info.get("title"),
-                info.get("uploader"),
-                info.get("description"),
-                f"{minutes}:{remaining:02d}",
-                *qualities_list,
-            ]
+            video_info: list[str] = [info.get("title"), info.get("uploader"), info.get("description"),
+                                     f"{minutes}:{remaining:02d}", *qualities_list, ]
             return video_info
 
         except json.JSONDecodeError:
