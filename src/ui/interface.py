@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 import threading
+import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 from typing import Any
@@ -46,9 +47,18 @@ class AppUI(ctk.CTk):
         super().__init__()
         self.queue_window = None
         try:
-            self.iconbitmap(resource_path("src/ui/icon.ico"))
+            if sys.platform == "win32":
+                self.iconbitmap(resource_path("src/ui/icon.ico"))
+            elif sys.platform == "darwin":
+                self.iconbitmap(resource_path("src/ui/icon.icns"))
+            else:
+                icon_path = resource_path("src/ui/icon.png")
+                if os.path.exists(icon_path):
+                    icon = tk.PhotoImage(file=icon_path)
+                    self.iconphoto(True, icon)
+
             ctk.set_appearance_mode("dark")
-            ctk.set_default_color_theme(resource_path("src/ui/themes/dark.json"))
+            ctk.set_default_color_theme(resource_path("src/ui/themes/basalt.json"))
         except Exception as e:
             print(f"Could not load the resource: {e}")
         self.title("VidGrabber (v0.2)")
@@ -121,8 +131,8 @@ class AppUI(ctk.CTk):
         self.download_mp4_button.pack(side="left", padx=(10, 0))
         self.download_mp4_button.configure(state="disabled")
 
-        self.download_tags_button = ctk.CTkButton(operation_row, text="🏷️ Tags (CSV + Clipboard)", width=60,
-                                                  height=25, command=self.handle_extract_tags, )
+        self.download_tags_button = ctk.CTkButton(operation_row, text="🏷️ Tags (CSV + Clipboard)", width=60, height=25,
+                                                  command=self.handle_extract_tags, )
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
@@ -198,17 +208,10 @@ class AppUI(ctk.CTk):
             Helper function for changing window theme.
             :param choice: User's theme choice.
             """
-            ctk.set_appearance_mode(choice)
-
-            effective_mode = ctk.get_appearance_mode().lower()
-
-            if effective_mode == "dark":
-                ctk.set_default_color_theme(resource_path("src/ui/themes/dark.json"))
-            else:
-                ctk.set_default_color_theme(resource_path("src/ui/themes/light.json"))
-
             if settings.winfo_exists():
                 settings.grab_release()
+
+            ctk.set_appearance_mode(choice)
 
             def delayed_update() -> None:
                 """
