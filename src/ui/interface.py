@@ -1,8 +1,11 @@
 import asyncio
 import os
+import sys
 import threading
+import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
+from typing import Any
 
 import customtkinter as ctk
 
@@ -13,6 +16,20 @@ from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.ui.queue_window import QueueWindow
 from src.video_info import VideoInfo
+
+
+def resource_path(relative_path: Any) -> str:
+    """
+    Function to get absolute path to resource, used for PyInstaller.
+    :param relative_path: Relative path of the resource.
+    :return: Absolute path for PyInstaller purpose.
+    """
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class AppUI(ctk.CTk):
@@ -29,8 +46,22 @@ class AppUI(ctk.CTk):
         """
         super().__init__()
         self.queue_window = None
-        ctk.set_appearance_mode("dark")
-        self.title("VidGrabber (v0.1)")
+        try:
+            if sys.platform == "win32":
+                self.iconbitmap(resource_path("src/ui/icons/icon.ico"))
+            elif sys.platform == "darwin":
+                self.iconbitmap(resource_path("src/ui/icons/icon.icns"))
+            else:
+                icon_path = resource_path("src/ui/icons/icon.png")
+                if os.path.exists(icon_path):
+                    icon = tk.PhotoImage(file=icon_path)
+                    self.iconphoto(True, icon)
+
+            ctk.set_appearance_mode("dark")
+            ctk.set_default_color_theme(resource_path("src/ui/themes/basalt.json"))
+        except Exception as e:
+            print(f"Could not load the resource: {e}")
+        self.title("VidGrabber (v0.2)")
         self.geometry("1000x350")
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
@@ -52,7 +83,7 @@ class AppUI(ctk.CTk):
            \_/    |__/ \_______/ \______/ |__/      \_______/|_______/ |_______/  \_______/|__/"""
 
         ascii_label: ctk.CTkLabel = ctk.CTkLabel(self.main_frame, text=ascii_art,
-                                                 font=ctk.CTkFont(family="Courier", size=12, weight="bold"),
+                                                 font=ctk.CTkFont(family="Courier", size=13, weight="bold"),
                                                  justify="left", )
         ascii_label.pack(pady=(10, 5))
         self.download_info = ctk.CTkLabel(self.main_frame, text="", font=ctk.CTkFont(size=14), )
@@ -67,11 +98,11 @@ class AppUI(ctk.CTk):
         entry_row.pack(pady=(5, 10), padx=10, anchor="n")
         entry_row.pack_propagate(False)
 
-        self.link_field = ctk.CTkEntry(entry_row, placeholder_text="Paste YouTube video link...", width=500, height=25,
+        self.link_field = ctk.CTkEntry(entry_row, placeholder_text="🔗 Paste YouTube link...", width=500, height=25,
                                        justify="left", )
         self.link_field.pack(side="left", padx=(0, 10))
 
-        self.video_info_button = ctk.CTkButton(entry_row, text="Grab the video", width=120, height=25,
+        self.video_info_button = ctk.CTkButton(entry_row, text="🔎 Grab video", width=120, height=25,
                                                command=self.handle_get_link_info, )
         self.video_info_button.pack(side="left")
 
@@ -80,28 +111,28 @@ class AppUI(ctk.CTk):
         operation_row.pack(pady=(5, 10), padx=10, anchor="n")
         operation_row.pack_propagate(False)
 
-        self.download_thumbnail_button = ctk.CTkButton(operation_row, text="Download thumbnail (JPG)", width=60,
+        self.download_thumbnail_button = ctk.CTkButton(operation_row, text="🖼️ Download thumbnail (JPG)", width=60,
                                                        height=25, command=self.handle_download_thumbnail, )
         self.download_thumbnail_button.pack(side="left")
         self.download_thumbnail_button.configure(state="disabled")
 
-        self.download_mp3_button = ctk.CTkButton(operation_row, text="Download audio (MP3)", width=60, height=25,
+        self.download_mp3_button = ctk.CTkButton(operation_row, text="🎵 Download MP3", width=60, height=25,
                                                  command=self.handle_download_mp3, )
         self.download_mp3_button.pack(side="left", padx=(10, 0))
         self.download_mp3_button.configure(state="disabled")
 
-        self.download_wav_button = ctk.CTkButton(operation_row, text="Download audio (WAV)", width=60, height=25,
+        self.download_wav_button = ctk.CTkButton(operation_row, text="🎵 Download WAV", width=60, height=25,
                                                  command=self.handle_download_wav, )
         self.download_wav_button.pack(side="left", padx=(10, 0))
         self.download_wav_button.configure(state="disabled")
 
-        self.download_mp4_button = ctk.CTkButton(operation_row, text="Download video (MP4)", width=60, height=25,
+        self.download_mp4_button = ctk.CTkButton(operation_row, text="🎬 Download MP4", width=60, height=25,
                                                  command=self.show_quality_selection, )
         self.download_mp4_button.pack(side="left", padx=(10, 0))
         self.download_mp4_button.configure(state="disabled")
 
-        self.download_tags_button = ctk.CTkButton(operation_row, text="Download tags (CSV + Clipboard)", width=60,
-                                                  height=25, command=self.handle_extract_tags, )
+        self.download_tags_button = ctk.CTkButton(operation_row, text="🏷️ Tags (CSV + Clipboard)", width=60, height=25,
+                                                  command=self.handle_extract_tags, )
         self.download_tags_button.pack(side="left", padx=(10, 0))
         self.download_tags_button.configure(state="disabled")
 
@@ -433,7 +464,7 @@ class AppUI(ctk.CTk):
         btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         btn_frame.pack(pady=20)
 
-        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="✖️ Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
 
         ctk.CTkButton(btn_frame, text="➕ Add to Queue", command=add_to_queue, width=120, fg_color="orange",
                       hover_color="darkorange", ).pack(side="left", padx=5)
@@ -514,7 +545,7 @@ class AppUI(ctk.CTk):
         btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         btn_frame.pack(pady=20)
 
-        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="✖️ Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
 
         ctk.CTkButton(btn_frame, text="➕ Add to Queue", command=add_to_queue, width=120, fg_color="orange",
                       hover_color="darkorange", ).pack(side="left", padx=5)
@@ -595,7 +626,7 @@ class AppUI(ctk.CTk):
         btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         btn_frame.pack(pady=20)
 
-        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="✖️ Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
 
         ctk.CTkButton(btn_frame, text="➕ Add to Queue", command=add_to_queue, width=120, fg_color="orange",
                       hover_color="darkorange", ).pack(side="left", padx=5)
@@ -676,7 +707,7 @@ class AppUI(ctk.CTk):
         btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         btn_frame.pack(pady=20)
 
-        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="✖️ Cancel", command=dialog.destroy, width=100).pack(side="left", padx=5)
 
         ctk.CTkButton(btn_frame, text="➕ Add to Queue", command=add_to_queue, width=120, fg_color="orange",
                       hover_color="darkorange", ).pack(side="left", padx=5)
@@ -777,14 +808,14 @@ class AppUI(ctk.CTk):
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         button_frame.pack(pady=20)
 
-        cancel_btn = ctk.CTkButton(button_frame, text="Cancel", command=dialog.destroy, width=100)
+        cancel_btn = ctk.CTkButton(button_frame, text="✖️ Cancel", command=dialog.destroy, width=100)
         cancel_btn.pack(side="left", padx=5)
 
         queue_btn = ctk.CTkButton(button_frame, text="➕ Add to Queue", command=on_add_to_queue, width=120,
                                   fg_color="orange", hover_color="darkorange", )
         queue_btn.pack(side="left", padx=5)
 
-        download_btn = ctk.CTkButton(button_frame, text="Download", command=on_download, width=100)
+        download_btn = ctk.CTkButton(button_frame, text="⬇️ Download", command=on_download, width=100)
         download_btn.pack(side="left", padx=5)
 
     def handle_download_mp4(self, quality: str) -> None:
