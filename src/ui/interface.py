@@ -47,10 +47,10 @@ class AppUI(ctk.CTk):
         self.queue_window = None
         try:
             self.iconbitmap(resource_path("icon.ico"))
-            ctk.set_default_color_theme(resource_path("src/ui/themes/light.json"))
+            ctk.set_appearance_mode("dark")
+            ctk.set_default_color_theme(resource_path("src/ui/themes/dark.json"))
         except Exception as e:
             print(f"Could not load the resource: {e}")
-        ctk.set_appearance_mode("dark")
         self.title("VidGrabber (v0.2)")
         self.geometry("1000x350")
         self.resizable(False, False)
@@ -198,10 +198,17 @@ class AppUI(ctk.CTk):
             Helper function for changing window theme.
             :param choice: User's theme choice.
             """
+            ctk.set_appearance_mode(choice)
+
+            effective_mode = ctk.get_appearance_mode().lower()
+
+            if effective_mode == "dark":
+                ctk.set_default_color_theme(resource_path("src/ui/themes/dark.json"))
+            else:
+                ctk.set_default_color_theme(resource_path("src/ui/themes/light.json"))
+
             if settings.winfo_exists():
                 settings.grab_release()
-
-            ctk.set_appearance_mode(choice)
 
             def delayed_update() -> None:
                 """
