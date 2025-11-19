@@ -47,6 +47,7 @@ class AppUI(ctk.CTk):
         self.queue_window = None
         try:
             self.iconbitmap(resource_path("icon.ico"))
+            ctk.set_default_color_theme(resource_path("src/ui/themes/mocha.json"))
         except Exception as e:
             print(f"Could not load the resource: {e}")
         ctk.set_appearance_mode("dark")
