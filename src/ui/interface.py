@@ -46,7 +46,7 @@ class AppUI(ctk.CTk):
         super().__init__()
         self.queue_window = None
         try:
-            self.iconbitmap(resource_path("icon.ico"))
+            self.iconbitmap(resource_path("src/ui/icon.ico"))
             ctk.set_appearance_mode("dark")
             ctk.set_default_color_theme(resource_path("src/ui/themes/dark.json"))
         except Exception as e:
