@@ -1,8 +1,10 @@
 import asyncio
 import os
+import sys
 import threading
 from pathlib import Path
 from tkinter import filedialog
+from typing import Any
 
 import customtkinter as ctk
 
@@ -13,6 +15,20 @@ from src.tag_extractor import TagExtractor
 from src.thumbnail_downloader import ThumbnailDownloader
 from src.ui.queue_window import QueueWindow
 from src.video_info import VideoInfo
+
+
+def resource_path(relative_path: Any) -> str:
+    """
+    Function to get absolute path to resource, used for PyInstaller.
+    :param relative_path: Relative path of the resource.
+    :return: Absolute path for PyInstaller purpose.
+    """
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class AppUI(ctk.CTk):
@@ -29,8 +45,12 @@ class AppUI(ctk.CTk):
         """
         super().__init__()
         self.queue_window = None
+        try:
+            self.iconbitmap(resource_path("icon.ico"))
+        except Exception as e:
+            print(f"Could not load the resource: {e}")
         ctk.set_appearance_mode("dark")
-        self.title("VidGrabber (v0.1)")
+        self.title("VidGrabber (v0.2)")
         self.geometry("1000x350")
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
