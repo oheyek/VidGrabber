@@ -48,11 +48,11 @@ class AppUI(ctk.CTk):
         self.queue_window = None
         try:
             if sys.platform == "win32":
-                self.iconbitmap(resource_path("src/ui/icon.ico"))
+                self.iconbitmap(resource_path("src/ui/icons/icon.ico"))
             elif sys.platform == "darwin":
-                self.iconbitmap(resource_path("src/ui/icon.icns"))
+                self.iconbitmap(resource_path("src/ui/icons/icon.icns"))
             else:
-                icon_path = resource_path("src/ui/icon.png")
+                icon_path = resource_path("src/ui/icons/icon.png")
                 if os.path.exists(icon_path):
                     icon = tk.PhotoImage(file=icon_path)
                     self.iconphoto(True, icon)
