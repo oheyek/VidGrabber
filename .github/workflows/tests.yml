@@ -15,67 +15,8 @@ jobs:
         python-version: [ '3.12' ]
 
     steps:
-      - name: Checkout code (no LFS)
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          lfs: false
-
-      - name: Download yt-dlp (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir -p binaries/linux
-          curl -L -o binaries/linux/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
-          chmod +x binaries/linux/yt-dlp
-          ls -la binaries/linux
-
-      - name: Download yt-dlp (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir -p binaries/macos
-          curl -L -o binaries/macos/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-          chmod +x binaries/macos/yt-dlp
-          ls -la binaries/macos
-
-      - name: Download yt-dlp (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Force -Path binaries\windows | Out-Null
-          Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "binaries\windows\yt-dlp.exe"
-          dir .\binaries\windows
-
-      - name: Download ffmpeg (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir -p binaries/linux
-          curl -L -o ffmpeg.tar.xz https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
-          tar -xf ffmpeg.tar.xz
-          mv ffmpeg-master-latest-linux64-gpl/bin/ffmpeg binaries/linux/ffmpeg
-          chmod +x binaries/linux/ffmpeg
-          rm -rf ffmpeg.tar.xz ffmpeg-master-latest-linux64-gpl
-          ls -la binaries/linux
-
-      - name: Download ffmpeg (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir -p binaries/macos
-          curl -L -o ffmpeg.zip https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip
-          unzip -q ffmpeg.zip
-          mv ffmpeg binaries/macos/ffmpeg
-          chmod +x binaries/macos/ffmpeg
-          rm ffmpeg.zip
-          ls -la binaries/macos
-
-      - name: Download ffmpeg (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Force -Path binaries\windows | Out-Null
-          Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
-          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "temp_ffmpeg"
-          Copy-Item "temp_ffmpeg\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe" -Destination "binaries\windows\ffmpeg.exe"
-          Remove-Item -Recurse -Force "temp_ffmpeg", "ffmpeg.zip"
-          dir .\binaries\windows
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -91,24 +32,6 @@ jobs:
         run: |
           uv pip install --system -r requirements.txt
           uv pip install --system pytest pytest-cov
-
-      - name: Verify binaries
-        shell: bash
-        run: |
-          echo "Verifying binaries..."
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            ls -la binaries/windows/
-            ./binaries/windows/yt-dlp.exe --version
-            ./binaries/windows/ffmpeg.exe -version
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            ls -la binaries/macos/
-            ./binaries/macos/yt-dlp --version
-            ./binaries/macos/ffmpeg -version
-          else
-            ls -la binaries/linux/
-            ./binaries/linux/yt-dlp --version
-            ./binaries/linux/ffmpeg -version
-          fi
 
       - name: Run tests with coverage
         run: pytest src/tests/ -v --tb=short --cov=src --cov-report=term-missing
