@@ -1,6 +1,7 @@
 asyncio==4.0.0
 customtkinter==5.2.2
 darkdetect==0.8.0
+doxypy==0.4.1
 iniconfig==2.1.0
 packaging==25.0
 pluggy==1.6.0
