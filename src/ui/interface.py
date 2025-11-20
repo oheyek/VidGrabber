@@ -49,9 +49,8 @@ class AppUI(ctk.CTk):
         self.queue_window = None
         try:
             if sys.platform == "win32":
-                self.iconbitmap(resource_path("src/ui/icons/icon.ico"))
-            elif sys.platform == "darwin":
-                self.iconbitmap(resource_path("src/ui/icons/icon.icns"))
+                self.iconbitmap(resource_path(os.path.join("src", "ui", "icons", "icon.ico")))
+
             else:
                 icon_path = resource_path("src/ui/icons/icon.png")
                 if os.path.exists(icon_path):
@@ -59,7 +58,7 @@ class AppUI(ctk.CTk):
                     self.iconphoto(True, icon)
 
             ctk.set_appearance_mode("dark")
-            ctk.set_default_color_theme(resource_path("src/ui/themes/basalt.json"))
+            ctk.set_default_color_theme(resource_path(os.path.join("src", "ui", "themes", "basalt.json")))
         except Exception as e:
             print(f"Could not load the resource: {e}")
         self.title("VidGrabber (v1.0)")
@@ -148,11 +147,29 @@ class AppUI(ctk.CTk):
                                           command=self.open_queue_window, )
         self.queue_button.pack(side="left", padx=5)
 
+    def _set_window_icon(self, window: ctk.CTkToplevel) -> None:
+        """
+        Helper method to set the icon for child windows (Toplevel).
+        :param window: The window instance to set the icon for.
+        """
+        try:
+            if sys.platform == "win32":
+                icon_path = resource_path(os.path.join("src", "ui", "icons", "icon.ico"))
+                window.after(300, lambda: window.iconbitmap(icon_path))
+            else:
+                icon_path = resource_path("src/ui/icons/icon.png")
+                if os.path.exists(icon_path):
+                    icon = tk.PhotoImage(file=icon_path)
+                    window.iconphoto(True, icon)
+        except Exception:
+            pass
+
     def open_settings_window(self) -> None:
         """
         Open settings dialog window with theme and download path configuration.
         """
         settings = ctk.CTkToplevel(self)
+        self._set_window_icon(settings)
         settings.title("Settings")
         settings.geometry("450x550")
         settings.resizable(False, False)
@@ -259,9 +276,8 @@ class AppUI(ctk.CTk):
         app_label = ctk.CTkLabel(credits_frame, text="VidGrabber (1.0)", font=ctk.CTkFont(size=20, weight="bold"))
         app_label.pack(pady=(10, 5))
 
-        version_label = ctk.CTkLabel(credits_frame,
-                                     text="Desktop YouTube Downloader.",
-                                     font=ctk.CTkFont(size=12), text_color="gray")
+        version_label = ctk.CTkLabel(credits_frame, text="Desktop YouTube Downloader.", font=ctk.CTkFont(size=12),
+                                     text_color="gray")
         version_label.pack(pady=(0, 20))
 
         github_label = ctk.CTkLabel(credits_frame, text="👨‍💻 Developer", font=ctk.CTkFont(size=14, weight="bold"))
@@ -293,8 +309,8 @@ class AppUI(ctk.CTk):
                                       hover_color="#FFE44D", width=200, height=35)
         coffee_button.pack(pady=5)
 
-        footer_label = ctk.CTkLabel(credits_frame, text="Made with ❤️ by ohey.",
-                                    font=ctk.CTkFont(size=10), text_color="gray")
+        footer_label = ctk.CTkLabel(credits_frame, text="Made with ❤️ by ohey.", font=ctk.CTkFont(size=10),
+                                    text_color="gray")
         footer_label.pack(pady=(20, 0), side="bottom")
 
     def open_queue_window(self) -> None:
@@ -303,6 +319,7 @@ class AppUI(ctk.CTk):
         """
         if self.queue_window is None or not self.queue_window.winfo_exists():
             self.queue_window = QueueWindow(self, self.download_queue)
+            self._set_window_icon(self.queue_window)
         else:
             self.queue_window.focus()
 
@@ -439,6 +456,7 @@ class AppUI(ctk.CTk):
         Opens a modal dialog allowing user to immediately download or queue the thumbnail.
         """
         dialog = ctk.CTkToplevel(self)
+        self._set_window_icon(dialog)
         dialog.title("Thumbnail Download")
         dialog.geometry("350x200")
         dialog.transient(self)
@@ -520,6 +538,7 @@ class AppUI(ctk.CTk):
         Opens a modal dialog allowing user to immediately download or queue the MP3 audio.
         """
         dialog = ctk.CTkToplevel(self)
+        self._set_window_icon(dialog)
         dialog.title("MP3 Download")
         dialog.geometry("350x200")
         dialog.transient(self)
@@ -601,6 +620,7 @@ class AppUI(ctk.CTk):
         Opens a modal dialog allowing user to immediately download or queue the WAV audio.
         """
         dialog = ctk.CTkToplevel(self)
+        self._set_window_icon(dialog)
         dialog.title("WAV Download")
         dialog.geometry("350x200")
         dialog.transient(self)
@@ -682,6 +702,7 @@ class AppUI(ctk.CTk):
         Opens a modal dialog allowing user to immediately extract or queue the tag extraction.
         """
         dialog = ctk.CTkToplevel(self)
+        self._set_window_icon(dialog)
         dialog.title("Tags Extraction")
         dialog.geometry("350x200")
         dialog.transient(self)
@@ -771,6 +792,7 @@ class AppUI(ctk.CTk):
         total_height = min(base_height + quality_height, 600)
 
         dialog = ctk.CTkToplevel(self)
+        self._set_window_icon(dialog)
         dialog.title("Select Video Quality")
         dialog.geometry(f"400x{total_height}")
         dialog.transient(self)

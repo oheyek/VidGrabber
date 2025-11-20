@@ -180,7 +180,7 @@ def download_binaries_if_missing() -> None:
                 ensure_executable(ff_path)
 
     elif system == "darwin":
-        yt_url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+        yt_url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos"
         ff_url = "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
         yt_path = bin_dir / "yt-dlp"
         ff_path = bin_dir / "ffmpeg"
@@ -226,8 +226,13 @@ async def check_yt_dlp_version() -> str:
     try:
         yt_dlp_path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
-        proc = await asyncio.create_subprocess_exec(str(yt_dlp_path), "--version", stdout=asyncio.subprocess.PIPE,
-                                                    stderr=asyncio.subprocess.PIPE)
+
+        creation_flags = 0x08000000 if sys.platform == "win32" else 0
+
+        proc = await asyncio.create_subprocess_exec(str(yt_dlp_path), "--version",
+                                                    stdout=asyncio.subprocess.PIPE,
+                                                    stderr=asyncio.subprocess.PIPE,
+                                                    creationflags=creation_flags)
         stdout, _ = await proc.communicate()
         version = stdout.decode().strip()
         print(f"Current yt-dlp version: {version}")
@@ -246,8 +251,13 @@ async def update_yt_dlp() -> bool:
         yt_dlp_path = get_yt_dlp_path()
         ensure_executable(yt_dlp_path)
         print("Getting yt-dlp update...")
-        proc = await asyncio.create_subprocess_exec(str(yt_dlp_path), "-U", stdout=asyncio.subprocess.PIPE,
-                                                    stderr=asyncio.subprocess.PIPE)
+
+        creation_flags = 0x08000000 if sys.platform == "win32" else 0
+
+        proc = await asyncio.create_subprocess_exec(str(yt_dlp_path), "-U",
+                                                    stdout=asyncio.subprocess.PIPE,
+                                                    stderr=asyncio.subprocess.PIPE,
+                                                    creationflags=creation_flags)
         stdout, _ = await proc.communicate()
         output = stdout.decode()
         if "up to date" in output.lower() or "up-to-date" in output.lower():
@@ -268,8 +278,13 @@ async def verify_ffmpeg() -> bool:
     try:
         ffmpeg_path = get_ffmpeg_path()
         ensure_executable(ffmpeg_path)
-        proc = await asyncio.create_subprocess_exec(str(ffmpeg_path), "-version", stdout=asyncio.subprocess.PIPE,
-                                                    stderr=asyncio.subprocess.PIPE)
+
+        creation_flags = 0x08000000 if sys.platform == "win32" else 0
+
+        proc = await asyncio.create_subprocess_exec(str(ffmpeg_path), "-version",
+                                                    stdout=asyncio.subprocess.PIPE,
+                                                    stderr=asyncio.subprocess.PIPE,
+                                                    creationflags=creation_flags)
         await proc.communicate()
         print("ffmpeg is available.")
         return True
