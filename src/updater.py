@@ -180,7 +180,7 @@ def download_binaries_if_missing() -> None:
                 ensure_executable(ff_path)
 
     elif system == "darwin":
-        yt_url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+        yt_url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos"
         ff_url = "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
         yt_path = bin_dir / "yt-dlp"
         ff_path = bin_dir / "ffmpeg"
