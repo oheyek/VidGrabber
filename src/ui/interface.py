@@ -50,8 +50,7 @@ class AppUI(ctk.CTk):
         try:
             if sys.platform == "win32":
                 self.iconbitmap(resource_path("src/ui/icons/icon.ico"))
-            elif sys.platform == "darwin":
-                self.iconbitmap(resource_path("src/ui/icons/icon.icns"))
+
             else:
                 icon_path = resource_path("src/ui/icons/icon.png")
                 if os.path.exists(icon_path):
@@ -259,9 +258,8 @@ class AppUI(ctk.CTk):
         app_label = ctk.CTkLabel(credits_frame, text="VidGrabber (1.0)", font=ctk.CTkFont(size=20, weight="bold"))
         app_label.pack(pady=(10, 5))
 
-        version_label = ctk.CTkLabel(credits_frame,
-                                     text="Desktop YouTube Downloader.",
-                                     font=ctk.CTkFont(size=12), text_color="gray")
+        version_label = ctk.CTkLabel(credits_frame, text="Desktop YouTube Downloader.", font=ctk.CTkFont(size=12),
+                                     text_color="gray")
         version_label.pack(pady=(0, 20))
 
         github_label = ctk.CTkLabel(credits_frame, text="👨‍💻 Developer", font=ctk.CTkFont(size=14, weight="bold"))
@@ -293,8 +291,8 @@ class AppUI(ctk.CTk):
                                       hover_color="#FFE44D", width=200, height=35)
         coffee_button.pack(pady=5)
 
-        footer_label = ctk.CTkLabel(credits_frame, text="Made with ❤️ by ohey.",
-                                    font=ctk.CTkFont(size=10), text_color="gray")
+        footer_label = ctk.CTkLabel(credits_frame, text="Made with ❤️ by ohey.", font=ctk.CTkFont(size=10),
+                                    text_color="gray")
         footer_label.pack(pady=(20, 0), side="bottom")
 
     def open_queue_window(self) -> None:
