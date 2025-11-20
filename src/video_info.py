@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Union
@@ -77,6 +78,10 @@ class VideoInfo:
             return "Invalid link provided."
 
         try:
+            creation_flags = 0
+            if sys.platform == "win32":
+                creation_flags = 0x08000000
+
             process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
                                                                                        "--dump-json", "--no-warnings",
                                                                                        "--no-playlist",
@@ -85,7 +90,8 @@ class VideoInfo:
                                                                                        str(self.ffmpeg_path.parent),
                                                                                        link,
                                                                                        stdout=asyncio.subprocess.PIPE,
-                                                                                       stderr=asyncio.subprocess.PIPE, )
+                                                                                       stderr=asyncio.subprocess.PIPE,
+                                                                                       creationflags=creation_flags)
 
             stdout, stderr = await process.communicate()
 

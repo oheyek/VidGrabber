@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from pathlib import Path
 from typing import Any, LiteralString
 
@@ -96,6 +97,9 @@ class TagExtractor:
             return "Invalid link provided."
 
         try:
+            creation_flags = 0
+            if sys.platform == "win32":
+                creation_flags = 0x08000000
             process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
                                                                                        "--dump-json", "--no-warnings",
                                                                                        "--skip-download",
@@ -103,7 +107,8 @@ class TagExtractor:
                                                                                        str(self.ffmpeg_path.parent),
                                                                                        link,
                                                                                        stdout=asyncio.subprocess.PIPE,
-                                                                                       stderr=asyncio.subprocess.PIPE)
+                                                                                       stderr=asyncio.subprocess.PIPE,
+                                                                                       creationflags=creation_flags)
 
             stdout, stderr = await process.communicate()
 
