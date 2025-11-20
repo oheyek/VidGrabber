@@ -1,10 +1,8 @@
 name: Tests
 
 on:
-  push:
-    branches: [ dev ]
   pull_request:
-    branches: [ dev, main ]
+    branches: [ dev ]
   workflow_call:
 
 jobs:
