@@ -155,7 +155,7 @@ class AppUI(ctk.CTk):
         try:
             if sys.platform == "win32":
                 icon_path = resource_path(os.path.join("src", "ui", "icons", "icon.ico"))
-                window.after(100, lambda: window.iconbitmap(icon_path))
+                window.after(300, lambda: window.iconbitmap(icon_path))
             else:
                 icon_path = resource_path("src/ui/icons/icon.png")
                 if os.path.exists(icon_path):
