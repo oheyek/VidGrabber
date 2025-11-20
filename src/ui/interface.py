@@ -49,7 +49,7 @@ class AppUI(ctk.CTk):
         self.queue_window = None
         try:
             if sys.platform == "win32":
-                self.iconbitmap(resource_path("src/ui/icons/icon.ico"))
+                self.iconbitmap(resource_path(os.path.join("src", "ui", "icons", "icon.ico")))
 
             else:
                 icon_path = resource_path("src/ui/icons/icon.png")
@@ -58,7 +58,7 @@ class AppUI(ctk.CTk):
                     self.iconphoto(True, icon)
 
             ctk.set_appearance_mode("dark")
-            ctk.set_default_color_theme(resource_path("src/ui/themes/basalt.json"))
+            ctk.set_default_color_theme(resource_path(os.path.join("src", "ui", "themes", "basalt.json")))
         except Exception as e:
             print(f"Could not load the resource: {e}")
         self.title("VidGrabber (v1.0)")

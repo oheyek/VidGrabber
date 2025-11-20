@@ -7,7 +7,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('src/ui/themes/basalt.json', 'src/ui/themes')
+        ('src/ui/themes/basalt.json', 'src/ui/themes'),
+        ('src/ui/icons/icon.ico', 'src/ui/icons')
     ],
     hiddenimports=[],
     hookspath=[],
