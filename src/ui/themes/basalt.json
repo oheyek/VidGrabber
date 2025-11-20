@@ -165,12 +165,12 @@
     "corner_radius": 1000,
     "border_width": 0,
     "fg_color": [
-      "#C9CACD",
-      "#B0B0B3"
-    ],
-    "progress_color": [
       "#DEDFE2",
       "#21232A"
+    ],
+    "progress_color": [
+      "#21232A",
+      "#DEDFE2"
     ],
     "border_color": [
       "#C9CACD",

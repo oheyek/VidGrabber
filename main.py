@@ -8,18 +8,27 @@ if sys.platform == 'win32':
     import os
 
     os.environ['PYTHONIOENCODING'] = 'utf-8'
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
+    if sys.stdout is not None:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
+    if sys.stderr is not None:
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 
 async def main() -> None:
     """
     Main function of the program.
     """
-    print("=" * 50)
+    if sys.stdout is not None:
+        print("=" * 50)
+
     await initialize_binaries()
-    print("=" * 50)
-    print()
+
+    if sys.stdout is not None:
+        print("=" * 50)
+        print()
+
     interface: AppUI = AppUI()
     interface.mainloop()
 

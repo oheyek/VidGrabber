@@ -49,6 +49,9 @@ class Downloader:
         output_template: str = str(Path(download_path) / f"%(title)s_{quality}p.%(ext)s")
 
         try:
+            creation_flags = 0
+            if sys.platform == "win32":
+                creation_flags = 0x08000000
             process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
                                                                                        "--format",
                                                                                        f"bestvideo[height={quality}]+bestaudio/best[height={quality}]",
@@ -59,7 +62,8 @@ class Downloader:
                                                                                        "--no-warnings",
                                                                                        "--newline", "--quiet", link,
                                                                                        stdout=asyncio.subprocess.PIPE,
-                                                                                       stderr=asyncio.subprocess.PIPE, )
+                                                                                       stderr=asyncio.subprocess.PIPE,
+                                                                                       creationflags=creation_flags)
 
             while True:
                 line = await process.stdout.readline()
@@ -109,6 +113,9 @@ class Downloader:
         output_template: str = str(Path(download_path) / "%(title)s.%(ext)s")
 
         try:
+            creation_flags = 0
+            if sys.platform == "win32":
+                creation_flags = 0x08000000
             process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
                                                                                        "--format", "bestaudio/best",
                                                                                        "--extract-audio",
@@ -121,7 +128,8 @@ class Downloader:
                                                                                        output_template, "--no-warnings",
                                                                                        "--newline", "--quiet", link,
                                                                                        stdout=asyncio.subprocess.PIPE,
-                                                                                       stderr=asyncio.subprocess.PIPE, )
+                                                                                       stderr=asyncio.subprocess.PIPE,
+                                                                                       creationflags=creation_flags)
 
             while True:
                 line = await process.stdout.readline()

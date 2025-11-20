@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 
 from .logger import log_call
@@ -34,6 +35,10 @@ class ThumbnailDownloader:
         output_template: str = str(output_path / "%(title)s.%(ext)s")
 
         try:
+            creation_flags = 0
+            if sys.platform == "win32":
+                creation_flags = 0x08000000
+
             process: asyncio.subprocess.Process = await asyncio.create_subprocess_exec(str(self.yt_dlp_path),
                                                                                        "--skip-download",
                                                                                        "--write-thumbnail",
@@ -43,7 +48,8 @@ class ThumbnailDownloader:
                                                                                        "--output", output_template,
                                                                                        "--no-warnings", link,
                                                                                        stdout=asyncio.subprocess.PIPE,
-                                                                                       stderr=asyncio.subprocess.PIPE)
+                                                                                       stderr=asyncio.subprocess.PIPE,
+                                                                                       creationflags=creation_flags)
 
             stdout, stderr = await process.communicate()
 
