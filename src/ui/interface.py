@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import tkinter as tk
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog
 from typing import Any
@@ -61,7 +62,7 @@ class AppUI(ctk.CTk):
             ctk.set_default_color_theme(resource_path("src/ui/themes/basalt.json"))
         except Exception as e:
             print(f"Could not load the resource: {e}")
-        self.title("VidGrabber (v0.2)")
+        self.title("VidGrabber (v1.0)")
         self.geometry("1000x350")
         self.resizable(False, False)
         self.main_frame = ctk.CTkFrame(self)
@@ -153,7 +154,7 @@ class AppUI(ctk.CTk):
         """
         settings = ctk.CTkToplevel(self)
         settings.title("Settings")
-        settings.geometry("450x500")
+        settings.geometry("450x550")
         settings.resizable(False, False)
         settings.transient(self)
         if os.name == "nt":  # Windows
@@ -181,19 +182,20 @@ class AppUI(ctk.CTk):
         title_label.pack(pady=(15, 10))
 
         # Tabs
-        tabview = ctk.CTkTabview(settings, width=400, height=250, fg_color="transparent")
+        tabview = ctk.CTkTabview(settings, width=400, height=300, fg_color="transparent")
         tabview.pack(padx=20, pady=10)
 
         tabview.add("🎨 Appearance")
         tabview.add("📁 Downloads")
+        tabview.add("ℹ️ Credits")
 
         # TAB 1: Appearance
         theme_label = ctk.CTkLabel(tabview.tab("🎨 Appearance"), text="Color Theme",
-                                   font=ctk.CTkFont(size=14, weight="bold"), )
+                                   font=ctk.CTkFont(size=14, weight="bold"))
         theme_label.pack(pady=(10, 5), anchor="w", padx=20)
 
         description_label = ctk.CTkLabel(tabview.tab("🎨 Appearance"), text="Choose your preferred color scheme:",
-                                         font=ctk.CTkFont(size=11), text_color="gray", )
+                                         font=ctk.CTkFont(size=11), text_color="gray")
         description_label.pack(pady=(0, 10), anchor="w", padx=20)
 
         current_theme = ctk.get_appearance_mode()
@@ -201,7 +203,7 @@ class AppUI(ctk.CTk):
 
         themes = [("🌙 Dark", "Dark", "Perfect for late-night coding"),
                   ("☀️ Light", "Light", "Easy on the eyes during daytime"),
-                  ("💻 System", "System", "Follows your OS theme"), ]
+                  ("💻 System", "System", "Follows your OS theme")]
 
         def change_theme(choice) -> None:
             """
@@ -233,26 +235,67 @@ class AppUI(ctk.CTk):
 
             radio = ctk.CTkRadioButton(theme_frame, text=label, variable=theme_var, value=value,
                                        command=lambda v=value: change_theme(v),
-                                       font=ctk.CTkFont(size=13, weight="bold"), )
+                                       font=ctk.CTkFont(size=13, weight="bold"))
             radio.pack(anchor="w")
 
-            desc_label = ctk.CTkLabel(theme_frame, text=f"   {desc}", font=ctk.CTkFont(size=10), text_color="gray", )
+            desc_label = ctk.CTkLabel(theme_frame, text=f"   {desc}", font=ctk.CTkFont(size=10), text_color="gray")
             desc_label.pack(anchor="w", padx=(25, 0))
 
         # TAB 2: Downloads
         path_label = ctk.CTkLabel(tabview.tab("📁 Downloads"), text="Downloads Location",
-                                  font=ctk.CTkFont(size=14, weight="bold"), )
+                                  font=ctk.CTkFont(size=14, weight="bold"))
         path_label.pack(pady=(10, 5), anchor="w", padx=20)
 
         self._create_path_selector(tabview.tab("📁 Downloads"), "Thumbnails (JPG)", "jpg")
-
         self._create_path_selector(tabview.tab("📁 Downloads"), "Audio (MP3)", "mp3")
-
         self._create_path_selector(tabview.tab("📁 Downloads"), "Audio (WAV)", "wav")
-
         self._create_path_selector(tabview.tab("📁 Downloads"), "Video (MP4)", "mp4")
-
         self._create_path_selector(tabview.tab("📁 Downloads"), "Tags (CSV)", "tags")
+
+        # TAB 3: Credits
+        credits_frame = ctk.CTkFrame(tabview.tab("ℹ️ Credits"), fg_color="transparent")
+        credits_frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+        app_label = ctk.CTkLabel(credits_frame, text="VidGrabber (1.0)", font=ctk.CTkFont(size=20, weight="bold"))
+        app_label.pack(pady=(10, 5))
+
+        version_label = ctk.CTkLabel(credits_frame,
+                                     text="Desktop YouTube Downloader.",
+                                     font=ctk.CTkFont(size=12), text_color="gray")
+        version_label.pack(pady=(0, 20))
+
+        github_label = ctk.CTkLabel(credits_frame, text="👨‍💻 Developer", font=ctk.CTkFont(size=14, weight="bold"))
+        github_label.pack(pady=(10, 5))
+
+        def open_github():
+            """Open GitHub profile in browser."""
+
+            webbrowser.open("https://github.com/oheyek")
+
+        github_button = ctk.CTkButton(credits_frame, text="🔗 View on GitHub", command=open_github,
+                                      font=ctk.CTkFont(size=13), width=200, height=35)
+        github_button.pack(pady=5)
+
+        separator = ctk.CTkLabel(credits_frame, text="───────────", text_color="gray")
+        separator.pack(pady=15)
+
+        support_label = ctk.CTkLabel(credits_frame, text="☕ Support Development",
+                                     font=ctk.CTkFont(size=14, weight="bold"))
+        support_label.pack(pady=(5, 10))
+
+        def open_coffee():
+            """Open Buy Me a Coffee page in browser."""
+            import webbrowser
+            webbrowser.open("https://buymeacoffee.com/ohey")
+
+        coffee_button = ctk.CTkButton(credits_frame, text="☕ Buy Me a Coffee", command=open_coffee,
+                                      font=ctk.CTkFont(size=13), fg_color="#FFDD00", text_color="black",
+                                      hover_color="#FFE44D", width=200, height=35)
+        coffee_button.pack(pady=5)
+
+        footer_label = ctk.CTkLabel(credits_frame, text="Made with ❤️ by ohey.",
+                                    font=ctk.CTkFont(size=10), text_color="gray")
+        footer_label.pack(pady=(20, 0), side="bottom")
 
     def open_queue_window(self) -> None:
         """
