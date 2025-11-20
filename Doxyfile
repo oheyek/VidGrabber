@@ -1,0 +1,57 @@
+# Project settings
+PROJECT_NAME           = "VidGrabber"
+PROJECT_BRIEF          = "Desktop application for downloading and processing YouTube content."
+OUTPUT_DIRECTORY       = docs
+PROJECT_LOGO           = src/ui/icons/icon-doxygen.png
+OUTPUT_LANGUAGE        = English
+
+# Input
+INPUT                  = src/ README.md
+FILE_PATTERNS          = *.py
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */tests/* */__pycache__/* */venv/* */.git/*
+
+# Python-specific settings
+OPTIMIZE_OUTPUT_JAVA   = YES
+PYTHON_DOCSTRING       = YES
+
+# Extract documentation from Python code
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+
+# Source code browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+# Documentation format
+GENERATE_LATEX         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+
+# Additional features
+JAVADOC_AUTOBRIEF      = YES
+GENERATE_TREEVIEW      = YES
+SEARCHENGINE           = YES
+
+# Diagrams (requires Graphviz)
+HAVE_DOT               = YES
+CLASS_DIAGRAMS         = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+UML_LOOK               = YES
+UML_LIMIT_NUM_FIELDS   = 10
+DOT_TRANSPARENT        = YES
