@@ -1,5 +1,6 @@
 altgraph==0.17.4
 asyncio==4.0.0
+certifi==2025.11.12
 customtkinter==5.2.2
 darkdetect==0.8.0
 doxypy==0.4.1
