@@ -34,8 +34,8 @@ A powerful desktop application for downloading and processing YouTube content wi
 1. Download the appropriate executable for your platform from
    the [Releases](https://github.com/oheyek/VidGrabber/releases) page:
     - Windows: `VidGrabber.exe`
-    - macOS: `VidGrabber.app`
-    - Linux: `VidGrabber`
+    - macOS: `VidGrabber-macOS.zip` (extract to get the App)
+    - Linux: `VidGrabber-Linux`
 2. Run the downloaded executable.
 3. On first launch, the app will automatically download required binaries (yt-dlp and ffmpeg).
 
