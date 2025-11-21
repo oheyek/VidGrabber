@@ -11,8 +11,9 @@
 </div>
 
 A powerful desktop application for downloading and processing YouTube content with an intuitive interface.
-
+<p align="center">
 <img src="src/ui/icons/screenshot.png" alt="VidGrabber Interface" width="500"/>
+</p>
 
 ## ✨ Features
 
