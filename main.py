@@ -1,8 +1,13 @@
 import asyncio
+import os
 import sys
+
+import certifi
 
 from src.ui.interface import AppUI
 from src.updater import initialize_binaries
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 if sys.platform == 'win32':
     import os
