@@ -1,0 +1,134 @@
+name: CI/CD & Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/tests.yml
+
+  build-docs:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen & Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+
+      - name: Generate documentation
+        run: doxygen Doxyfile
+
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/html
+
+  deploy-docs:
+    needs: build-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+  build-binaries:
+    needs: deploy-docs
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            spec_file: win.spec
+            output_name: VidGrabber.exe
+            upload_name: VidGrabber.exe
+            content_type: application/vnd.microsoft.portable-executable
+
+          - os: ubuntu-latest
+            spec_file: linux.spec
+            output_name: VidGrabber
+            upload_name: VidGrabber-Linux
+            content_type: application/x-executable
+
+          - os: macos-latest
+            spec_file: macos.spec
+            output_name: VidGrabber.app
+            upload_name: VidGrabber-macOS.zip
+            content_type: application/zip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv and dependencies
+        uses: astral-sh/setup-uv@v2
+        with:
+          enable-cache: true
+
+      - name: Install deps
+        run: |
+          uv pip install --system -r requirements.txt
+          uv pip install --system pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller ${{ matrix.spec_file }}
+
+      - name: Zip macOS App
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd dist
+          zip -r ../${{ matrix.upload_name }} ${{ matrix.output_name }}
+
+      - name: Prepare Binary (Win/Linux)
+        if: matrix.os != 'macos-latest'
+        shell: bash
+        run: |
+          mv dist/${{ matrix.output_name }} ./${{ matrix.upload_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os }}
+          path: ${{ matrix.upload_name }}
+
+  create-release:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          draft: true
+          prerelease: false
+          files: releases/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
