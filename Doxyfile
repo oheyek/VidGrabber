@@ -6,7 +6,7 @@ PROJECT_LOGO           = src/ui/icons/icon-doxygen.png
 OUTPUT_LANGUAGE        = English
 
 # Input
-INPUT                  = src/ README.md
+INPUT                  = src/
 FILE_PATTERNS          = *.py
 RECURSIVE              = YES
 EXCLUDE_PATTERNS       = */tests/* */__pycache__/* */venv/* */.git/*
