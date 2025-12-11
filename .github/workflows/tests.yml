@@ -34,5 +34,4 @@ jobs:
           uv pip install --system pytest pytest-cov
 
       - name: Run tests with coverage
-        run: uv pytest src/tests/ -v --tb=short --cov=src --cov-report=term-missing
-
+        run: pytest src/tests/ -v --tb=short --cov=src --cov-report=term-missing
