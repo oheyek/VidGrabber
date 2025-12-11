@@ -5,7 +5,7 @@ customtkinter==5.2.2
 darkdetect==0.8.0
 doxypy==0.4.1
 iniconfig==2.1.0
-macholib==1.16.3
+macholib==1.16.4
 packaging==25.0
 pillow==12.0.0
 pluggy==1.6.0
