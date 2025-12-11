@@ -2,16 +2,17 @@ name: Tests
 
 on:
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
   workflow_call:
 
 jobs:
   test:
+    if: ${{ github.actor != 'dependabot[bot]' && !contains(join(github.event.pull_request.changed_files.*.path, ','), 'requirements.txt') }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        python-version: [ '3.12' ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12"]
 
     steps:
       - name: Checkout code
@@ -22,7 +23,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install uv
+      - name: Install uv (Astral venv)
         uses: astral-sh/setup-uv@v2
         with:
           enable-cache: true
@@ -33,4 +34,5 @@ jobs:
           uv pip install --system pytest pytest-cov
 
       - name: Run tests with coverage
-        run: pytest src/tests/ -v --tb=short --cov=src --cov-report=term-missing
+        run: uv pytest src/tests/ -v --tb=short --cov=src --cov-report=term-missing
+
