@@ -3,7 +3,7 @@ name: CI/CD & Release
 on:
   push:
     branches: [main]
-    paths-ignote:
+    paths-ignore:
       - "requirements.txt"
   workflow_dispatch:
 
