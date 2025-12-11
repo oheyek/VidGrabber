@@ -2,7 +2,9 @@ name: CI/CD & Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths-ignore:
+      - "requirements.txt"
   workflow_dispatch:
 
 permissions:
@@ -76,7 +78,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install uv and dependencies
         uses: astral-sh/setup-uv@v2
@@ -110,7 +112,6 @@ jobs:
         run: |
           mv dist/${{ matrix.output_name }} ./${{ matrix.upload_name }}
 
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -140,3 +141,4 @@ jobs:
           files: releases/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
