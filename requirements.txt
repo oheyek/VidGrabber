@@ -1,6 +1,6 @@
 altgraph==0.17.5
 asyncio==4.0.0
-certifi==2026.6.17
+certifi==2026.7.22
 customtkinter==6.0.0
 darkdetect==0.8.0
 doxypy==0.4.1
@@ -15,4 +15,4 @@ pyinstaller-hooks-contrib==2026.6
 pyperclip==1.11.0
 pytest==9.1.1
 pytest-asyncio==1.4.0
-setuptools==82.0.1
+setuptools==83.0.0
