@@ -7,7 +7,7 @@ doxypy==0.4.1
 iniconfig==2.3.0
 macholib==1.16.4
 packaging==26.2
-pillow==12.3.0
+pillow==13.0.0
 pluggy==1.6.0
 pygments==2.20.0
 pyinstaller==6.21.0
